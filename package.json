@@ -5,22 +5,31 @@
   "main": "index.mjs",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.mjs"
+    "api": "nodemon index.mjs",
+    "worker": "node src/workers/ticket.workers.mjs",
+    "dev": "concurrently \"npm run api\" \"npm run worker\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "bullmq": "^5.74.0",
+    "canvas": "^3.2.3",
+    "cloudinary": "^2.9.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.23.0",
-    "multer": "^2.1.1"
+    "multer": "^2.1.1",
+    "nodemailer": "^8.0.5",
+    "puppeteer": "^24.40.0",
+    "qrcode": "^1.5.4",
+    "redis.js": "^1.2.4"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "nodemon": "^3.1.14"
   }
 }
