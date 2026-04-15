@@ -3,8 +3,8 @@ module.exports = {
     {
       name: "api",
       script: "index.mjs",
-      instances: 2, // uses all CPU cores
-      exec_mode: "cluster",
+      instances: 1, // uses all CPU cores
+      exec_mode: "fork",
       watch: false,
       env: {
         NODE_ENV: "production",
