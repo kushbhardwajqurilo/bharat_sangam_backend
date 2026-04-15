@@ -4,64 +4,90 @@ const eventSchema = new mongoose.Schema(
   {
     eventName: {
       type: String,
-      required: true,
+      required: [true, "Event name is required"],
       trim: true,
-      index: true, //  search optimization
     },
-
     description: {
       type: String,
-      required: true,
+      default: "",
+    },
+    venueName: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: [true, "Venue name is required"],
+      trim: true,
+      ref: "venue",
     },
 
-    eventTiming: {
-      startDate: {
-        type: Date,
-        required: true,
-        index: true,
+    date: {
+      type: Date,
+      required: [true, "Event date is required"],
+    },
+
+    time: {
+      type: String, // you can also use Date if combining date+time
+      required: [true, "Event time is required"],
+    },
+
+    tabs: [
+      {
+        type: String, // e.g. Singer, Guitar, Tabla
+        trim: true,
       },
-      endDate: {
-        type: Date,
-        required: true,
+    ],
+
+    hashTags: [String],
+
+    bookingType: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "booking",
+      required: [true, "Booking type is required"],
+    },
+
+    sponsors: [
+      {
+        type: String, // OR you can make separate Sponsor model later
+        trim: true,
+        ref: "sponsor",
+        default: null,
       },
-    },
+    ],
 
-    instrument: {
-      type: [String],
-      default: [],
-    },
+    artists: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "artist", // link with your artistModel
+      },
+    ],
 
-    totalTickets: {
+    homeBanner: {
+      type: String,
+      default: "",
+    },
+    eventBanner: {
+      type: String,
+      default: "",
+    },
+    maxSeats: {
       type: Number,
-      required: true,
-      min: 1,
+      default: 100,
     },
 
-    soldTickets: {
+    bookedSeats: {
       type: Number,
       default: 0,
-      min: 0,
     },
-
+    availableTickets: {
+      type: Number,
+      default: 100,
+    },
     isActive: {
       type: Boolean,
       default: true,
-      index: true,
     },
   },
   {
     timestamps: true,
-    versionKey: false,
   },
 );
 
-//  Virtual
-eventSchema.virtual("availableTickets").get(function () {
-  return this.totalTickets - this.soldTickets;
-});
-
-//  Compound index (for filtering)
-eventSchema.index({ isActive: 1, "eventTiming.startDate": 1 });
-
-const eventModel = mongoose.model("event", eventSchema);
-export default eventModel;
+export default mongoose.model("Event", eventSchema);
