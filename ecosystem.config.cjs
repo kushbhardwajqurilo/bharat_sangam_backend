@@ -3,7 +3,7 @@ module.exports = {
     {
       name: "api",
       script: "index.mjs",
-      instances: "max", // uses all CPU cores
+      instances: 2, // uses all CPU cores
       exec_mode: "cluster",
       watch: false,
       env: {
