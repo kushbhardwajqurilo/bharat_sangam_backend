@@ -1,4 +1,4 @@
-export const ecosystem = {
+module.exports = {
   apps: [
     {
       name: "api",
