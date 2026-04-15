@@ -20,9 +20,9 @@ let browser;
 const worker = new Worker(
   "ticketQueue",
   async (job) => {
-    console.log("🔥 JOB RECEIVED:");
+    console.log(" JOB RECEIVED:");
     const { ticketId, email, u_id, allowVisitors } = job.data;
-    console.log("🚀 Worker started...");
+    console.log(" Worker started...");
     const genTicket = await bookingModel.aggregate([
       { $match: { _id: new mongoose.Types.ObjectId(ticketId) } },
 
