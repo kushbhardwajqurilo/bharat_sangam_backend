@@ -45,6 +45,9 @@ const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, "public")));
 
 // route
+app.get("/test", function (req, res, next) {
+  res.json({ success: true });
+});
 app.get("/ticket", (req, res) => {
   const filePath = path.join(__dirname, "src/templates", "ticketTemplate.html");
   res.sendFile(filePath);

@@ -233,7 +233,8 @@ export const getLatestEvent = catchAsync(async (req, res, next) => {
         bookedSeats: 1,
         maxSeats: 1,
         availableTickets: 1,
-
+        eventBanner: 1,
+        homeBanner: 1,
         //  Venue (limited fields)
         venueName: {
           venue: "$venueName.venue",

@@ -311,7 +311,7 @@ export const generateTicketHTML = (data) => {
       <div class="booking-id">BOOKING ID: ${data.u_id}</div>
     </div>
 
-    <div class="visitors">No. of Tickets - ${data.visitors}</div>
+    <div class="visitors">No. of Guests - ${data.visitors}</div>
 
     <!-- Perforation with Circles -->
     <div class="perforation_main">
