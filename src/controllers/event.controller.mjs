@@ -267,3 +267,5 @@ export const getLatestEvent = catchAsync(async (req, res, next) => {
 
   return sendSuccess(res, "Event fetched successfully", event[0], 200, true);
 });
+
+//
