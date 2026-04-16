@@ -31,7 +31,8 @@ export const createEvent = catchAsync(async (req, res, next) => {
     !time ||
     !bookingType ||
     !availableTickets ||
-    !category
+    !category ||
+    !description
   ) {
     return next(new AppError("Required fields missing", 400));
   }
@@ -235,6 +236,7 @@ export const getLatestEvent = catchAsync(async (req, res, next) => {
         availableTickets: 1,
         eventBanner: 1,
         homeBanner: 1,
+        ogImage: 1,
         //  Venue (limited fields)
         venueName: {
           venue: "$venueName.venue",

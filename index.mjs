@@ -2,7 +2,8 @@ import dotenv from "dotenv";
 dotenv.config();
 import app from "./app.mjs";
 import connectDB from "./src/config/databse.mjs";
-
+// import { sendTestEmail } from "./src/config/bravoConfig.mjs";
+// sendTestEmail();
 const PORT = process.env.PORT || 8001;
 
 const startServer = async () => {

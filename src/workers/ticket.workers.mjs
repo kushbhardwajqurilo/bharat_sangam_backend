@@ -8,6 +8,7 @@ import bookingModel from "../models/bookingModel.js";
 import { sendTicketEmail } from "../config/mail.config.mjs";
 import { Worker } from "bullmq";
 import connectDB from "../config/databse.mjs";
+import { sendTicketEmailFromBravo } from "../config/bravoConfig.mjs";
 dotenv.config();
 
 console.log("🚀 Worker file loaded...");
@@ -100,7 +101,7 @@ const worker = new Worker(
 
     const formatted = date.toLocaleDateString("en-IN");
     const html = generateTicketHTML({
-      logo: "https://4frnn03l-8000.inc1.devtunnels.ms/logo.png",
+      logo: "https://4frnn03l-80001.inc1.devtunnels.ms/logo.png",
       eventName: finalTicket?.eventDetails?.eventName,
       poster: `${finalTicket?.venueDetails?.image}`,
       time: finalTicket?.eventDetails?.time,
@@ -143,7 +144,14 @@ const worker = new Worker(
 
     await page.close();
 
-    const emailVal = await sendTicketEmail(email, buffer, u_id);
+    // const emailVal = await sendTicketEmail(email, buffer, u_id);
+    const emailVal = await sendTicketEmailFromBravo(email, buffer, u_id, {
+      eventName: finalTicket?.eventDetails?.eventName,
+      venue: finalTicket?.venueDetails?.address,
+      date: formatted,
+      time: finalTicket?.eventDetails?.time,
+    });
+
     console.log("emailVal", emailVal);
   },
   { connection: redisConnection },

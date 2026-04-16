@@ -1,3 +1,3 @@
 export const redisConnection = {
-  url: "redis-cli-urediss://default:TJnHPrt1wqZSKluBhDaXAKjpL0yErAd4@redis-15373.c257.us-east-1-3.ec2.cloud.redislabs.com:15373",
+  url: "redis-cli-uredis://default:7D1AC0heB1FNLBRD3ilOq1RQ6fI4QIdo@redis-12579.crce206.ap-south-1-1.ec2.cloud.redislabs.com:12579",
 };
