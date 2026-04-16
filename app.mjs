@@ -85,7 +85,7 @@ app.use(`${base}/feedback`, feedbackRouter);
 app.use(`${base}/contact`, contactRouter);
 
 // ================= 404 HANDLER =================
-app.use("*", (req, res) => {
+app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: "Route not found ❌",
