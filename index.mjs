@@ -3,7 +3,7 @@ dotenv.config();
 import app from "./app.mjs";
 import connectDB from "./src/config/databse.mjs";
 
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 8001;
 
 const startServer = async () => {
   try {
