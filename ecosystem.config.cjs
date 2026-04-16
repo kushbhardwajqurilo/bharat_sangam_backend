@@ -3,16 +3,21 @@ module.exports = {
     {
       name: "api",
       script: "index.mjs",
-      instances: 1, // uses all CPU cores
+      cwd: "/var/www/bharat_bhakti",
+      interpreter: "node",
+      instances: 1,
       exec_mode: "fork",
       watch: false,
       env: {
         NODE_ENV: "production",
+        PORT: 8000,
       },
     },
     {
       name: "worker",
       script: "src/workers/ticket.workers.mjs",
+      cwd: "/var/www/bharat_bhakti",
+      interpreter: "node",
       instances: 1,
       exec_mode: "fork",
       watch: false,
