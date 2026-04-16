@@ -3,7 +3,7 @@ module.exports = {
     {
       name: "api",
       script: "index.mjs",
-      cwd: "/var/www/bharat_bhakti",
+      cwd: "/var/www/bharat_bhakti/bharat_sangam_backend",
       interpreter: "node",
       instances: 1,
       exec_mode: "fork",
@@ -16,7 +16,7 @@ module.exports = {
     {
       name: "worker",
       script: "src/workers/ticket.workers.mjs",
-      cwd: "/var/www/bharat_bhakti",
+      cwd: "/var/www/bharat_bhakti/bharat_sangam_backend",
       interpreter: "node",
       instances: 1,
       exec_mode: "fork",
