@@ -272,3 +272,23 @@ export const getLatestEvent = catchAsync(async (req, res, next) => {
 });
 
 //
+
+// event capecity api
+export const latestEventCapacity = catchAsync(async (req, res, next) => {
+  const event = await eventModel
+    .findOne({})
+    .sort({ createdAt: -1 })
+    .select("maxSeats bookedSeats availableTickets _id ")
+    .lean();
+  if (!event) {
+    return next(new AppError("failed to fetch", 400));
+  }
+  const payload = {
+    eventId: event?._id,
+    maxSeats: event?.maxSeats,
+    bookedSeats: event?.bookedSeats,
+    availableTickets: event?.availableTickets,
+    isSoldOut: event?.maxSeats === event?.bookedSeats,
+  };
+  return sendSuccess(res, "success", payload, 200, true);
+});
