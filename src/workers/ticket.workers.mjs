@@ -101,7 +101,7 @@ const worker = new Worker(
 
     const formatted = date.toLocaleDateString("en-IN");
     const html = generateTicketHTML({
-      logo: "https://4frnn03l-80001.inc1.devtunnels.ms/logo.png",
+      logo: "https://bbsapi.qurilo.com/logo.png",
       eventName: finalTicket?.eventDetails?.eventName,
       poster: `${finalTicket?.venueDetails?.image}`,
       time: finalTicket?.eventDetails?.time,

@@ -29,6 +29,8 @@ const allowOrigins = [
   "http://localhost:3000",
   "https://l3zz8htl-3000.inc1.devtunnels.ms",
   "http://209.74.88.2:3011",
+  "https://bharatbhaktisangam.com",
+  "https://www.bharatbhaktisangam.com",
 ];
 
 const corsOrigins = {

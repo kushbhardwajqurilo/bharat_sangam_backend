@@ -270,7 +270,7 @@ export const generateTicketHTML = (data) => {
     <div class="header">
       <div class="logo-placeholder">
         <img
-          src="${data.logo}"
+          src="https://bbsapi.qurilo.com/logo.png"
           alt="Bharat Bhakti Logo"
           style="max-width: 100%; max-height: 70px;"
         />
