@@ -28,6 +28,7 @@ app.use((req, res, next) => {
 const allowOrigins = [
   "http://localhost:3000",
   "https://l3zz8htl-3000.inc1.devtunnels.ms",
+  "http://209.74.88.2:3011",
 ];
 
 const corsOrigins = {
@@ -39,6 +40,7 @@ const corsOrigins = {
       callback(new Error("Not allowed by CORS"));
     }
   },
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   credentials: true,
 };
 
