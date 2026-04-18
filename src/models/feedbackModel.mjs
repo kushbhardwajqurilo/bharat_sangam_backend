@@ -40,6 +40,7 @@ const feedbackSchema = new mongoose.Schema(
       required: [true, "email required"],
       lowercase: true,
       trim: true,
+      unique: true,
     },
 
     message: {
@@ -65,6 +66,7 @@ feedbackSchema.index({ avgRating: -1, createdAt: -1 });
 
 // (Optional) latest only index
 feedbackSchema.index({ createdAt: -1 });
+feedbackSchema.index({ email: 1 });
 
 const feedbackModel = mongoose.model("feedback", feedbackSchema);
 

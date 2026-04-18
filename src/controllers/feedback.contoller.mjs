@@ -20,11 +20,14 @@ export const feedbackController = catchAsync(async (req, res, next) => {
     message: message.toLowerCase().trim(),
     rating,
   };
-  const result = await feedbackModel.create(payload);
-  if (!result) {
-    return next(new AppError("feedback failed try again", 400));
+  try {
+    const result = await feedbackModel.create(payload);
+    return sendSuccess(res, "Feedback Successfully", {}, 201, true);
+  } catch (error) {
+    if (error.code === 11000) {
+      return next(new AppError("Feedback Already Given"));
+    }
   }
-  return sendSuccess(res, "success", {}, 200, true);
 });
 
 // get all

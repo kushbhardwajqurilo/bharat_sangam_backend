@@ -12,9 +12,14 @@ client.authentications["api-key"].apiKey = process.env.BREVO_API_KEY;
 const tranEmailApi = new SibApiV3Sdk.TransactionalEmailsApi();
 
 // ✅ MAIN FUNCTION
-export const sendTicketEmailFromBravo = async (email, buffer, u_id, data) => {
+export const sendTicketEmailFromBravo = async (
+  email,
+  buffer,
+  u_id,
+  data,
+  username,
+) => {
   console.log("emails", email);
-
   console.log("emails data", data);
 
   try {
@@ -32,7 +37,7 @@ export const sendTicketEmailFromBravo = async (email, buffer, u_id, data) => {
 
       params: {
         id: u_id,
-        name: "Kush", // ✅ ADD
+        name: username, // ✅ ADD
         eventName: data.eventName,
         venue: data.venue,
         time: data?.time,

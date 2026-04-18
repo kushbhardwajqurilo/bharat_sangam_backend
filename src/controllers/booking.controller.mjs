@@ -108,6 +108,7 @@ export const createTicket = catchAsync(async (req, res, next) => {
 
     const job = await ticketQueue.add("generateTicket", {
       ticketId: ticket._id,
+      username,
       email,
       u_id,
       allowVisitors: totalTicket,

@@ -22,7 +22,7 @@ const worker = new Worker(
   "ticketQueue",
   async (job) => {
     console.log(" JOB RECEIVED:");
-    const { ticketId, email, u_id, allowVisitors } = job.data;
+    const { ticketId, email, u_id, allowVisitors, username } = job.data;
     console.log(" Worker started...");
     const genTicket = await bookingModel.aggregate([
       { $match: { _id: new mongoose.Types.ObjectId(ticketId) } },
@@ -96,12 +96,14 @@ const worker = new Worker(
 
     const finalTicket = genTicket[0];
     // console.log("final", finalTicket);
+    const logoUrl = "https://bbsapi.qurilo.com/logo.png";
     const qr = await QRCode.toDataURL(u_id);
     const date = new Date(finalTicket?.eventDetails?.date);
 
     const formatted = date.toLocaleDateString("en-IN");
     const html = generateTicketHTML({
-      logo: "https://bbsapi.qurilo.com/logo.png",
+      name: username,
+      logo: logoUrl,
       eventName: finalTicket?.eventDetails?.eventName,
       poster: `${finalTicket?.venueDetails?.image}`,
       time: finalTicket?.eventDetails?.time,
@@ -145,12 +147,18 @@ const worker = new Worker(
     await page.close();
 
     // const emailVal = await sendTicketEmail(email, buffer, u_id);
-    const emailVal = await sendTicketEmailFromBravo(email, buffer, u_id, {
-      eventName: finalTicket?.eventDetails?.eventName,
-      venue: finalTicket?.venueDetails?.address,
-      date: formatted,
-      time: finalTicket?.eventDetails?.time,
-    });
+    const emailVal = await sendTicketEmailFromBravo(
+      email,
+      buffer,
+      u_id,
+      {
+        eventName: finalTicket?.eventDetails?.eventName,
+        venue: finalTicket?.venueDetails?.address,
+        date: formatted,
+        time: finalTicket?.eventDetails?.time,
+      },
+      username,
+    );
 
     console.log("emailVal", emailVal);
   },
