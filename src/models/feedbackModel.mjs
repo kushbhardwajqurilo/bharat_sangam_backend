@@ -23,7 +23,6 @@ const feedbackSchema = new mongoose.Schema(
       },
     },
 
-    //  calculated field (important)
     avgRating: {
       type: Number,
       index: true,
@@ -40,7 +39,7 @@ const feedbackSchema = new mongoose.Schema(
       required: [true, "email required"],
       lowercase: true,
       trim: true,
-      unique: true,
+      unique: true, //  keep this
     },
 
     message: {
@@ -52,21 +51,16 @@ const feedbackSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-//  Auto calculate avg rating before save
+//  Auto calculate avg rating safely
 feedbackSchema.pre("save", function (next) {
-  const { food, management, crowd } = this.rating;
-
+  const { food = 4, management = 4, crowd = 4 } = this.rating || {};
   this.avgRating = Number(((food + management + crowd) / 3).toFixed(1));
-
   next();
 });
 
-//  Main index → best rating + latest first
+//  Performance indexes
 feedbackSchema.index({ avgRating: -1, createdAt: -1 });
-
-// (Optional) latest only index
 feedbackSchema.index({ createdAt: -1 });
-feedbackSchema.index({ email: 1 });
 
 const feedbackModel = mongoose.model("feedback", feedbackSchema);
 
