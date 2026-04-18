@@ -87,6 +87,7 @@ app.use(`${base}/artist`, artistRouter);
 app.use(`${base}/venue`, venueRouter);
 app.use(`${base}/event`, eventRouter);
 app.use(`${base}/feedback`, feedbackRouter);
+app.use(`${base}/contact`, contactRouter);
 app.use(`${base}/subscriber`, subscriberRouter);
 
 // ================= 404 HANDLER =================
