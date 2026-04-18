@@ -25,7 +25,9 @@ export const feedbackController = catchAsync(async (req, res, next) => {
   if (!emailRegex.test(email)) {
     return next(new AppError("Invalid Email Format", 400));
   }
-
+  if (!email.endsWith("@gmail.com")) {
+    return next(new AppError("Invaid Email Try again", 400));
+  }
   try {
     //  Pre-check (good UX, but not main protection)
     const existing = await feedbackModel.findOne({ email });

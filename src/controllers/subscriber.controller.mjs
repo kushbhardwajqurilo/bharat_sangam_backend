@@ -17,7 +17,9 @@ export const addSubscribers = catchAsync(async (req, res, next) => {
   if (!emailRegex.test(email)) {
     return next(new AppError("Invalid email format", 400));
   }
-
+  if (!email.endsWith("@gmail.com")) {
+    return next(new AppError("Invalid Email", 400));
+  }
   try {
     //  Single DB call (no findOne)
     const subscriber = await subscriberModel.create({ email });
