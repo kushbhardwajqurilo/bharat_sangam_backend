@@ -1,5 +1,5 @@
 export const generateTicketHTML = (data) => {
-  console.log("tiket data", data);
+  // console.log("tiket data", data);
   return `
 <!doctype html>
 <html lang="en">

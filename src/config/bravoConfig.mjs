@@ -4,14 +4,14 @@ import SibApiV3Sdk from "sib-api-v3-sdk";
 import dotenv from "dotenv";
 
 dotenv.config();
-
-// 🔥 Setup Brevo client
+// console.log("ENV Mail", process.env.EMAIL);
+//  Setup Brevo client
 const client = SibApiV3Sdk.ApiClient.instance;
 client.authentications["api-key"].apiKey = process.env.BREVO_API_KEY;
 
 const tranEmailApi = new SibApiV3Sdk.TransactionalEmailsApi();
 
-// ✅ MAIN FUNCTION
+//  MAIN FUNCTION
 export const sendTicketEmailFromBravo = async (
   email,
   buffer,
@@ -19,22 +19,21 @@ export const sendTicketEmailFromBravo = async (
   data,
   username,
 ) => {
-  console.log("emails", email);
-  console.log("emails data", data);
+  // console.log("emails", email);
+  // console.log("emails data", data);
 
   try {
     const base64 = buffer.toString("base64");
 
     const res = await tranEmailApi.sendTransacEmail({
       sender: {
-        email: "kushqurilo@gmail.com", // testing
+        email: `${process.env.INFO_EMAIL}`, // testing info@bharatbhaktisangam.com
         name: "Bharat Bhakti Sangam",
       },
 
       to: [{ email }],
 
-      templateId: 2, // 👈 YOUR TEMPLATE ID
-
+      templateId: 1,
       params: {
         id: u_id,
         name: username, // ✅ ADD
@@ -45,7 +44,7 @@ export const sendTicketEmailFromBravo = async (
 
         schedule: data.date, // ✅ ADD
 
-        contact: "+91 1234567890", // ✅ ADD
+        contact: `${process.env.CONTACT}`, // ✅ ADD
       },
 
       // 📎 Download attachment

@@ -160,7 +160,7 @@ const worker = new Worker(
       username,
     );
 
-    console.log("emailVal", emailVal);
+    // console.log("emailVal", emailVal);
   },
   { connection: redisConnection },
 );
