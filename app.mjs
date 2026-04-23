@@ -64,6 +64,18 @@ const __dirname = path.dirname(__filename);
 
 app.use(express.static(path.join(__dirname, "public")));
 
+app.get("/api-docs", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "swagger.html"));
+});
+
+app.get("/api-docs/openapi.json", (req, res) => {
+  res.sendFile(path.join(__dirname, "docs", "openapi.json"));
+});
+
+app.get("/api-docs/postman-collection.json", (req, res) => {
+  res.sendFile(path.join(__dirname, "docs", "postman_collection.json"));
+});
+
 // ================= ROUTES =================
 
 // 🔥 FIXED BASE (NO TRAILING SLASH)

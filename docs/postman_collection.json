@@ -1,0 +1,473 @@
+{
+  "info": {
+    "name": "Bharat Sangam Backend API",
+    "_postman_id": "0f0ce6d8-8912-468d-8a11-6a4a638963b2",
+    "description": "Postman collection for the Bharat Sangam backend. Configure `baseUrl`, `adminToken`, and `volunteerToken` variables before using protected routes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8001" },
+    { "key": "adminToken", "value": "" },
+    { "key": "volunteerToken", "value": "" },
+    { "key": "bookingTypeId", "value": "" },
+    { "key": "categoryId", "value": "" },
+    { "key": "venueId", "value": "" },
+    { "key": "artistId", "value": "" },
+    { "key": "eventId", "value": "" },
+    { "key": "ticketCode", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health"
+          }
+        },
+        {
+          "name": "Swagger JSON",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api-docs/openapi.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Auth",
+      "item": [
+        {
+          "name": "Register Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@example.com\",\n  \"phone\": \"9876543210\",\n  \"password\": \"StrongPass123\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/admin/register"
+          }
+        },
+        {
+          "name": "Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"StrongPass123\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/admin/login"
+          }
+        },
+        {
+          "name": "Get Cloudinary Signature",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/admin/presign-url"
+          }
+        },
+        {
+          "name": "Add Volunteer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Volunteer One\",\n  \"email\": \"volunteer@example.com\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/admin/add-volunteer"
+          }
+        },
+        {
+          "name": "Login Volunteer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"volunteer@example.com\",\n  \"password\": \"Volunteer123\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/admin/login-volunteer"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Booking Types",
+      "item": [
+        {
+          "name": "Create Booking Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingType\": \"vip\",\n  \"price\": 1500\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/admin/booking-type"
+          }
+        },
+        {
+          "name": "List Booking Types",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/admin/getall-bookingtype?page=1&limit=10"
+          }
+        },
+        {
+          "name": "Get Booking Type",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/admin/get-single-bookingtype?b_id={{bookingTypeId}}"
+          }
+        },
+        {
+          "name": "Update Booking Type",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingType\": \"premium\",\n  \"price\": 2000\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/admin/booking-type/{{bookingTypeId}}"
+          }
+        },
+        {
+          "name": "Delete Booking Type",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/admin/booking-type?b_id={{bookingTypeId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryName\": \"Bhajan Night\",\n  \"picture\": \"https://example.com/category.jpg\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/admin/add-category"
+          }
+        },
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/admin/getAll-category?page=1&limit=10"
+          }
+        },
+        {
+          "name": "Get Category",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/admin/getSingle-category/{{categoryId}}"
+          }
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryName\": \"Devotional Evening\",\n  \"picture\": \"https://example.com/category-updated.jpg\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/admin/add-category/{{categoryId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Venues",
+      "item": [
+        {
+          "name": "Create Venue",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"venue\": \"Main Hall\",\n  \"address\": \"Varanasi, Uttar Pradesh\",\n  \"image\": \"https://example.com/venue.jpg\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/venue"
+          }
+        },
+        {
+          "name": "Get Venue",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/venue/{{venueId}}"
+          }
+        },
+        {
+          "name": "Update Venue",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address\": \"Ayodhya, Uttar Pradesh\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/venue/{{venueId}}"
+          }
+        },
+        {
+          "name": "Delete Venue",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/venue/{{venueId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Artists",
+      "item": [
+        {
+          "name": "Create Artist",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"artistName\": \"Raghav Sharma\",\n  \"profileImage\": \"https://example.com/profile.jpg\",\n  \"about\": \"Devotional singer and live performer.\",\n  \"email\": \"artist@example.com\",\n  \"contactNo\": \"9876543210\",\n  \"performanceTime\": \"7:30 PM\",\n  \"instruments\": [\"Vocals\", \"Harmonium\"],\n  \"gallery\": [\n    {\n      \"url\": \"https://example.com/gallery-1.jpg\",\n      \"key\": \"artists/gallery-1\"\n    }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/artist"
+          }
+        },
+        {
+          "name": "List Artists",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/artist/all?page=1&limit=10"
+          }
+        },
+        {
+          "name": "Get Artist",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/artist/single/{{artistId}}"
+          }
+        },
+        {
+          "name": "Update Artist",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"about\": \"Lead devotional vocalist.\",\n  \"performanceTime\": \"8:15 PM\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/artist/{{artistId}}"
+          }
+        },
+        {
+          "name": "Delete Artist",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/artist/{{artistId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Events",
+      "item": [
+        {
+          "name": "Create Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventName\": \"Bharat Sangam 2026\",\n  \"venueName\": \"{{venueId}}\",\n  \"date\": \"2026-05-15T00:00:00.000Z\",\n  \"time\": \"06:00 PM\",\n  \"tabs\": [\"Bhajan\", \"Kirtan\"],\n  \"hashTags\": [\"#devotional\", \"#sangam\"],\n  \"bookingType\": \"{{bookingTypeId}}\",\n  \"sponsors\": [\"Sponsor One\"],\n  \"artists\": [\"{{artistId}}\"],\n  \"availableTickets\": 200,\n  \"category\": \"Bhajan Night\",\n  \"homeBanner\": \"https://example.com/home-banner.jpg\",\n  \"eventBanner\": \"https://example.com/event-banner.jpg\",\n  \"description\": \"A devotional cultural evening.\",\n  \"maxSeats\": 200,\n  \"bookedSeats\": 0\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/event"
+          }
+        },
+        {
+          "name": "Latest Event",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/event/latest"
+          }
+        },
+        {
+          "name": "Latest Event Capacity",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/event/latest-capacity"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Create Ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"Rahul\",\n  \"email\": \"rahul@gmail.com\",\n  \"eventId\": \"{{eventId}}\",\n  \"totalTicket\": 2,\n  \"phone\": \"9876543210\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/booking/create-ticket"
+          }
+        },
+        {
+          "name": "Ticket Detail",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/booking/ticket-detail?u_id={{ticketCode}}"
+          }
+        },
+        {
+          "name": "Verify Ticket",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{volunteerToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"allow_user\": 2\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/booking/ticket-verify?u_id={{ticketCode}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public Forms",
+      "item": [
+        {
+          "name": "Submit Feedback",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Rahul Sharma\",\n  \"email\": \"rahul@gmail.com\",\n  \"message\": \"Wonderful event.\",\n  \"rating\": 5\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/feedback"
+          }
+        },
+        {
+          "name": "Submit Contact Query",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Visitor\",\n  \"email\": \"visitor@example.com\",\n  \"phone\": \"9876543210\",\n  \"query\": \"Please share event timings.\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/contact"
+          }
+        },
+        {
+          "name": "Subscribe",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"subscriber@gmail.com\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/subscriber"
+          }
+        }
+      ]
+    }
+  ]
+}

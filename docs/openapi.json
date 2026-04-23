@@ -1,0 +1,2206 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Bharat Sangam Backend API",
+    "version": "1.0.0",
+    "description": "OpenAPI documentation for the Bharat Sangam backend. Most endpoints return a shared JSON shape with `status`, `message`, and `data`. Some ticket validation failures currently return HTML strings from the controller, which is called out on those endpoints."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8001",
+      "description": "Local development"
+    },
+    {
+      "url": "https://bharatbhaktisangam.com",
+      "description": "Production domain"
+    }
+  ],
+  "tags": [
+    {
+      "name": "System",
+      "description": "Service health and utility endpoints"
+    },
+    {
+      "name": "Admin Auth",
+      "description": "Admin and volunteer authentication flows"
+    },
+    {
+      "name": "Booking Types",
+      "description": "Admin-managed booking type catalog"
+    },
+    {
+      "name": "Categories",
+      "description": "Event category management"
+    },
+    {
+      "name": "Venues",
+      "description": "Venue management endpoints"
+    },
+    {
+      "name": "Artists",
+      "description": "Artist management endpoints"
+    },
+    {
+      "name": "Events",
+      "description": "Event creation and public event lookups"
+    },
+    {
+      "name": "Bookings",
+      "description": "Ticket creation and verification"
+    },
+    {
+      "name": "Public Forms",
+      "description": "Public-facing contact, feedback, and subscriber endpoints"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "SuccessEnvelope": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "type": "object"
+          }
+        },
+        "required": ["status", "message", "data"]
+      },
+      "ErrorEnvelope": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string",
+            "example": "Validation failed"
+          }
+        },
+        "required": ["status", "message"]
+      },
+      "AdminRegisterRequest": {
+        "type": "object",
+        "required": ["name", "email", "phone", "password"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Admin User"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "admin@example.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "9876543210"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "example": "StrongPass123"
+          }
+        }
+      },
+      "AdminLoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "admin@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "StrongPass123"
+          }
+        }
+      },
+      "VolunteerLoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "volunteer@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "Volunteer123"
+          }
+        }
+      },
+      "TokenPair": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string"
+          },
+          "refresh_token": {
+            "type": "string"
+          }
+        }
+      },
+      "VolunteerTokenResponse": {
+        "type": "string",
+        "description": "Volunteer login returns the token string directly in `data`."
+      },
+      "CloudinarySignature": {
+        "type": "object",
+        "properties": {
+          "timestamps": {
+            "type": "integer"
+          },
+          "signature": {
+            "type": "string"
+          },
+          "apiKey": {
+            "type": "string"
+          },
+          "cloudName": {
+            "type": "string"
+          },
+          "folder": {
+            "type": "string",
+            "example": "uploads"
+          }
+        }
+      },
+      "VolunteerCreateRequest": {
+        "type": "object",
+        "required": ["name", "email"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Volunteer One"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "volunteer@example.com"
+          }
+        }
+      },
+      "BookingTypeRequest": {
+        "type": "object",
+        "required": ["bookingType", "price"],
+        "properties": {
+          "bookingType": {
+            "type": "string",
+            "example": "vip"
+          },
+          "price": {
+            "type": "number",
+            "example": 1500
+          }
+        }
+      },
+      "BookingType": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "6808b4a770802057ba7f0001"
+          },
+          "bookingType": {
+            "type": "string",
+            "example": "vip"
+          },
+          "price": {
+            "type": "number",
+            "example": 1500
+          }
+        }
+      },
+      "VenueRequest": {
+        "type": "object",
+        "required": ["venue", "address", "image"],
+        "properties": {
+          "venue": {
+            "type": "string",
+            "example": "Main Hall"
+          },
+          "address": {
+            "type": "string",
+            "example": "Varanasi, Uttar Pradesh"
+          },
+          "image": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://res.cloudinary.com/demo/image/upload/sample.jpg"
+          }
+        }
+      },
+      "VenueUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "venue": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "Venue": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "venue": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string"
+          },
+          "isDelete": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CategoryRequest": {
+        "type": "object",
+        "required": ["categoryName", "picture"],
+        "properties": {
+          "categoryName": {
+            "type": "string",
+            "example": "Bhajan Night"
+          },
+          "picture": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "CategoryUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "categoryName": {
+            "type": "string"
+          },
+          "picture": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "categoryName": {
+            "type": "string"
+          },
+          "picture": {
+            "type": "string"
+          },
+          "status": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ArtistGalleryItem": {
+        "type": "object",
+        "required": ["url"],
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "key": {
+            "type": "string",
+            "example": "artists/sample"
+          }
+        }
+      },
+      "ArtistRequest": {
+        "type": "object",
+        "required": [
+          "artistName",
+          "profileImage",
+          "about",
+          "email",
+          "contactNo",
+          "performanceTime",
+          "instruments",
+          "gallery"
+        ],
+        "properties": {
+          "artistName": {
+            "type": "string",
+            "example": "Raghav Sharma"
+          },
+          "profileImage": {
+            "type": "string",
+            "format": "uri"
+          },
+          "about": {
+            "type": "string",
+            "example": "Devotional singer and live performer."
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "contactNo": {
+            "type": "string",
+            "example": "9876543210"
+          },
+          "performanceTime": {
+            "type": "string",
+            "example": "7:30 PM"
+          },
+          "instruments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["Vocals", "Harmonium"]
+          },
+          "gallery": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArtistGalleryItem"
+            }
+          }
+        }
+      },
+      "ArtistUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "artistName": {
+            "type": "string"
+          },
+          "profileImage": {
+            "type": "string",
+            "format": "uri"
+          },
+          "about": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "contactNo": {
+            "type": "string"
+          },
+          "performanceTime": {
+            "type": "string"
+          },
+          "instruments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "gallery": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArtistGalleryItem"
+            }
+          }
+        }
+      },
+      "Artist": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "artistName": {
+            "type": "string"
+          },
+          "profileImage": {
+            "type": "string"
+          },
+          "about": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "contactNo": {
+            "type": "string"
+          },
+          "performanceTime": {
+            "type": "string"
+          },
+          "instruments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "gallery": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArtistGalleryItem"
+            }
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreateEventRequest": {
+        "type": "object",
+        "required": [
+          "eventName",
+          "venueName",
+          "date",
+          "time",
+          "bookingType",
+          "availableTickets",
+          "category",
+          "description"
+        ],
+        "properties": {
+          "eventName": {
+            "type": "string",
+            "example": "Bharat Sangam 2026"
+          },
+          "venueName": {
+            "type": "string",
+            "description": "MongoDB ObjectId of the venue",
+            "example": "6808b4a770802057ba7f0002"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "time": {
+            "type": "string",
+            "example": "06:00 PM"
+          },
+          "tabs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "hashTags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "bookingType": {
+            "type": "string",
+            "description": "MongoDB ObjectId of the booking type",
+            "example": "6808b4a770802057ba7f0003"
+          },
+          "sponsors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "artists": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "availableTickets": {
+            "type": "integer",
+            "example": 200
+          },
+          "category": {
+            "type": "string",
+            "example": "Bhajan Night"
+          },
+          "homeBanner": {
+            "type": "string",
+            "format": "uri"
+          },
+          "eventBanner": {
+            "type": "string",
+            "format": "uri"
+          },
+          "description": {
+            "type": "string"
+          },
+          "maxSeats": {
+            "type": "integer",
+            "example": 200
+          },
+          "bookedSeats": {
+            "type": "integer",
+            "example": 0
+          }
+        }
+      },
+      "LatestEvent": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "eventName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "time": {
+            "type": "string"
+          },
+          "tabs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "hashTags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "bookedSeats": {
+            "type": "integer"
+          },
+          "maxSeats": {
+            "type": "integer"
+          },
+          "availableTickets": {
+            "type": "integer"
+          },
+          "eventBanner": {
+            "type": "string"
+          },
+          "homeBanner": {
+            "type": "string"
+          },
+          "ogImage": {
+            "type": "string"
+          },
+          "venueName": {
+            "type": "object",
+            "properties": {
+              "venue": {
+                "type": "string"
+              },
+              "address": {
+                "type": "string"
+              }
+            }
+          },
+          "bookingType": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "price": {
+                "type": "number"
+              }
+            }
+          },
+          "artists": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "image": {
+                  "type": "string"
+                },
+                "about": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "LatestCapacity": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string"
+          },
+          "maxSeats": {
+            "type": "integer"
+          },
+          "bookedSeats": {
+            "type": "integer"
+          },
+          "availableTickets": {
+            "type": "integer"
+          },
+          "isSoldOut": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreateTicketRequest": {
+        "type": "object",
+        "required": ["username", "email", "eventId", "totalTicket", "phone"],
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "Rahul"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "rahul@gmail.com"
+          },
+          "eventId": {
+            "type": "string",
+            "example": "6808b4a770802057ba7f0004"
+          },
+          "totalTicket": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 2
+          },
+          "phone": {
+            "type": "string",
+            "example": "9876543210"
+          }
+        }
+      },
+      "CreateTicketResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Ticket created"
+          },
+          "bookingId": {
+            "type": "string",
+            "example": "BBS123456"
+          }
+        }
+      },
+      "Booking": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "u_id": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "number"
+          },
+          "eventId": {
+            "type": "string"
+          },
+          "totalTicket": {
+            "type": "integer"
+          },
+          "allowVisitors": {
+            "type": "integer"
+          },
+          "paymentStatus": {
+            "type": "string",
+            "enum": ["pending", "success", "failed"]
+          },
+          "isUsed": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "VerifyTicketRequest": {
+        "type": "object",
+        "required": ["allow_user"],
+        "properties": {
+          "allow_user": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 2
+          }
+        }
+      },
+      "FeedbackRequest": {
+        "type": "object",
+        "required": ["fullName", "email", "message"],
+        "properties": {
+          "fullName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@gmail.com"
+          },
+          "message": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          }
+        }
+      },
+      "ContactRequest": {
+        "type": "object",
+        "required": ["fullName", "email", "phone", "query"],
+        "properties": {
+          "fullName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "query": {
+            "type": "string"
+          }
+        }
+      },
+      "SubscriberRequest": {
+        "type": "object",
+        "required": ["email"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "subscriber@gmail.com"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "uptime": {
+                      "type": "number"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/test": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Simple connectivity test",
+        "responses": {
+          "200": {
+            "description": "Test response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/register": {
+      "post": {
+        "tags": ["Admin Auth"],
+        "summary": "Register an admin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminRegisterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Admin registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "example": {}
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/login": {
+      "post": {
+        "tags": ["Admin Auth"],
+        "summary": "Login as admin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminLoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/TokenPair"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/login-volunteer": {
+      "post": {
+        "tags": ["Admin Auth"],
+        "summary": "Login as volunteer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VolunteerLoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Volunteer login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/VolunteerTokenResponse"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/presign-url": {
+      "get": {
+        "tags": ["Admin Auth"],
+        "summary": "Get Cloudinary signature values",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Signature payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/CloudinarySignature"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/add-volunteer": {
+      "post": {
+        "tags": ["Admin Auth"],
+        "summary": "Create a volunteer user",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VolunteerCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Volunteer created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "password": {
+                              "type": "string",
+                              "example": "ABcd1234"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/booking-type": {
+      "post": {
+        "tags": ["Booking Types"],
+        "summary": "Create a booking type",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookingTypeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Booking type created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Booking Types"],
+        "summary": "Soft delete a booking type",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "b_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Booking type deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/booking-type/{id}": {
+      "put": {
+        "tags": ["Booking Types"],
+        "summary": "Update a booking type",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookingTypeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Booking type updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/BookingType"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/getall-bookingtype": {
+      "get": {
+        "tags": ["Booking Types"],
+        "summary": "List booking types",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Booking types fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "data": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/BookingType"
+                              }
+                            },
+                            "pagination": {
+                              "type": "object",
+                              "properties": {
+                                "total": {
+                                  "type": "integer"
+                                },
+                                "page": {
+                                  "type": "integer"
+                                },
+                                "pages": {
+                                  "type": "integer"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/get-single-bookingtype": {
+      "get": {
+        "tags": ["Booking Types"],
+        "summary": "Get one booking type",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "b_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Booking type fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/BookingType"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/add-category": {
+      "post": {
+        "tags": ["Categories"],
+        "summary": "Create a category",
+        "description": "Intended as an admin-only endpoint. In the current codebase the middleware call is missing explicit roles, so requests may be rejected until that is corrected.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Category created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/getAll-category": {
+      "get": {
+        "tags": ["Categories"],
+        "summary": "List categories",
+        "description": "Intended as an admin-only endpoint. In the current codebase the middleware call is missing explicit roles, so requests may be rejected until that is corrected.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Categories fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "categories": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/Category"
+                              }
+                            },
+                            "pagination": {
+                              "type": "object",
+                              "properties": {
+                                "total": {
+                                  "type": "integer"
+                                },
+                                "page": {
+                                  "type": "integer"
+                                },
+                                "limit": {
+                                  "type": "integer"
+                                },
+                                "totalPages": {
+                                  "type": "integer"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/getSingle-category/{id}": {
+      "get": {
+        "tags": ["Categories"],
+        "summary": "Get one category",
+        "description": "Intended as an admin-only endpoint. In the current codebase the middleware call is missing explicit roles, so requests may be rejected until that is corrected.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Category"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/add-category/{id}": {
+      "put": {
+        "tags": ["Categories"],
+        "summary": "Update a category",
+        "description": "Intended as an admin-only endpoint. In the current codebase the middleware call is missing explicit roles, so requests may be rejected until that is corrected.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Category updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Category"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/add-venue": {
+      "post": {
+        "tags": ["Venues"],
+        "summary": "Create a venue via admin route alias",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VenueRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Venue created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/venue": {
+      "post": {
+        "tags": ["Venues"],
+        "summary": "Create a venue",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VenueRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Venue created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/venue/{id}": {
+      "get": {
+        "tags": ["Venues"],
+        "summary": "Get one venue",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Venue fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Venues"],
+        "summary": "Update a venue",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VenueUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Venue updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Venue"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Venues"],
+        "summary": "Soft delete a venue",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Venue deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/venue/all": {
+      "get": {
+        "tags": ["Venues"],
+        "summary": "List venues",
+        "description": "This route is mounted, but it currently points to an unfinished controller implementation and may not return a final JSON payload until completed.",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Expected venue list response"
+          }
+        }
+      }
+    },
+    "/api/v1/artist": {
+      "post": {
+        "tags": ["Artists"],
+        "summary": "Create an artist",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArtistRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Artist created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/artist/{id}": {
+      "put": {
+        "tags": ["Artists"],
+        "summary": "Update an artist",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArtistUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Artist updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Artist"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Artists"],
+        "summary": "Soft delete an artist",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Artist deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/artist/single/{id}": {
+      "get": {
+        "tags": ["Artists"],
+        "summary": "Get one artist",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Artist fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Artist"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/artist/all": {
+      "get": {
+        "tags": ["Artists"],
+        "summary": "List artists",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Artists fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "data": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/Artist"
+                              }
+                            },
+                            "pagination": {
+                              "type": "object",
+                              "properties": {
+                                "total": {
+                                  "type": "integer"
+                                },
+                                "page": {
+                                  "type": "integer"
+                                },
+                                "pages": {
+                                  "type": "integer"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/event": {
+      "post": {
+        "tags": ["Events"],
+        "summary": "Create an event",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEventRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Event created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/event/latest": {
+      "get": {
+        "tags": ["Events"],
+        "summary": "Get the latest event with populated venue, booking type, and artist data",
+        "responses": {
+          "200": {
+            "description": "Latest event fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/LatestEvent"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No event found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/event/latest-capacity": {
+      "get": {
+        "tags": ["Events"],
+        "summary": "Get capacity metrics for the latest event",
+        "responses": {
+          "200": {
+            "description": "Capacity fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/LatestCapacity"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/booking/create-ticket": {
+      "post": {
+        "tags": ["Bookings"],
+        "summary": "Create a ticket booking",
+        "description": "Creates the booking immediately, decrements available seats on the latest event, and queues ticket generation/email work asynchronously.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTicketRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ticket created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateTicketResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Tickets sold out or invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/booking/ticket-detail": {
+      "get": {
+        "tags": ["Bookings"],
+        "summary": "Get ticket details by booking code",
+        "description": "On invalid or missing `u_id`, the current controller can return an HTML snippet instead of JSON.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "u_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ticket details fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessEnvelope" },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Booking"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/booking/ticket-verify": {
+      "put": {
+        "tags": ["Bookings"],
+        "summary": "Verify ticket entry count",
+        "description": "Protected by the volunteer JWT secret. Admin JWTs are listed in the middleware call, but the current route first validates against the volunteer secret.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "u_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyTicketRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Ticket verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Already used, over-limit, or invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/feedback": {
+      "post": {
+        "tags": ["Public Forms"],
+        "summary": "Submit feedback",
+        "description": "The current implementation accepts only Gmail addresses and rejects duplicate feedback from the same email.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Feedback submitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contact": {
+      "post": {
+        "tags": ["Public Forms"],
+        "summary": "Submit a contact query",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Query submitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/subscriber": {
+      "post": {
+        "tags": ["Public Forms"],
+        "summary": "Subscribe to updates",
+        "description": "The current implementation accepts only Gmail addresses and rejects duplicates.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscriberRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Subscription stored",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

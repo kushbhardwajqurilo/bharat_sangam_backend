@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bharat Sangam API Docs</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5efe3;
+        --panel: #fffaf2;
+        --ink: #1f1a17;
+        --accent: #9c3d10;
+      }
+
+      body {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        background:
+          radial-gradient(circle at top left, rgba(197, 113, 45, 0.18), transparent 30%),
+          linear-gradient(180deg, #f8f2e8 0%, #f3ebdf 100%);
+        color: var(--ink);
+      }
+
+      .topbar {
+        padding: 20px 24px;
+        background: rgba(255, 250, 242, 0.92);
+        border-bottom: 1px solid rgba(156, 61, 16, 0.15);
+        backdrop-filter: blur(8px);
+      }
+
+      .topbar h1 {
+        margin: 0 0 6px;
+        font-size: 28px;
+      }
+
+      .topbar p {
+        margin: 0;
+        max-width: 820px;
+        line-height: 1.5;
+      }
+
+      .topbar a {
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      #swagger-ui {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <h1>Bharat Sangam Backend API</h1>
+      <p>
+        Interactive Swagger reference for the live backend. Import the
+        <a href="/api-docs/postman-collection.json">Postman collection</a>
+        or use the OpenAPI file at
+        <a href="/api-docs/openapi.json">/api-docs/openapi.json</a>.
+      </p>
+    </div>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+    <script>
+      window.ui = SwaggerUIBundle({
+        url: "/api-docs/openapi.json",
+        dom_id: "#swagger-ui",
+        deepLinking: true,
+        presets: [SwaggerUIBundle.presets.apis],
+      });
+    </script>
+  </body>
+  </html>
