@@ -110,11 +110,13 @@ export const createTicket = catchAsync(async (req, res, next) => {
       ticketId: ticket._id,
       username,
       email,
+      phone: Number(phone),
       u_id,
       allowVisitors: totalTicket,
     });
 
     // console.log("✅ STEP 4: JOB ADDED SUCCESS:", job.id);
+    // console.log("queue jon", job);
   } catch (err) {
     console.error("❌ STEP 4 ERROR: Queue failed", err);
   }
@@ -200,3 +202,32 @@ export const verifyTicket = catchAsync(async (req, res, next) => {
     return next(new AppError(`Something went wrong ${err}`, 400));
   }
 });
+
+export const getTicketDetailsByPhone = catchAsync(async (req, res, next) => {
+  // console.log("query", req.query);
+  const { phone } = req.query;
+  if (!phone) {
+    return next(new AppError("phone number required"), 400);
+  }
+  const cleaned = phone.replace(/^(\+91|91)/, "").replace(/\D/g, "");
+
+  if (cleaned.length !== 10) {
+    throw new Error("Invalid phone number");
+  }
+  // console.log(cleaned);
+  const event = await eventModel
+    .findOne({})
+    .sort({ createdAt: -1 })
+    .select("_id")
+    .lean();
+  const ticket = await bookingModel
+    .findOne({ phone: cleaned, eventId: event?._id })
+    .sort({ createdAt: -1 });
+  if (!ticket) {
+    return next(new AppError("ticket not found", 400));
+  }
+  console.log("tiken", ticket);
+  return sendSuccess(res, "success", ticket, 200, true);
+});
+
+// get all booking ids by phone number for whatsapp;

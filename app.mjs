@@ -12,6 +12,7 @@ import eventRouter from "./src/routes/event.route.mjs";
 import feedbackRouter from "./src/routes/feedback.route.mjs";
 import contactRouter from "./src/routes/contact.route.mjs";
 import subscriberRouter from "./src/routes/subscriber.route.mjs";
+import sponsorRouter from "./src/routes/sponsor.route.mjs";
 
 const app = express();
 
@@ -30,6 +31,7 @@ const allowOrigins = [
   "http://localhost:3000",
   "https://l3zz8htl-3000.inc1.devtunnels.ms",
   "http://209.74.88.2:3011",
+  "http://198.168.1.30:3000",
   "https://bharatbhaktisangam.com",
   "https://www.bharatbhaktisangam.com",
 ];
@@ -101,7 +103,7 @@ app.use(`${base}/event`, eventRouter);
 app.use(`${base}/feedback`, feedbackRouter);
 app.use(`${base}/contact`, contactRouter);
 app.use(`${base}/subscriber`, subscriberRouter);
-
+app.use(`${base}/sponsor`, sponsorRouter);
 // ================= 404 HANDLER =================
 app.use((req, res) => {
   res.status(404).json({

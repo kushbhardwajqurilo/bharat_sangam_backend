@@ -29,22 +29,18 @@ const artistSchema = new mongoose.Schema(
       type: String,
     },
 
-    performanceTime: {
-      type: String,
-      required: [true, "Performance time is required"],
-    },
-
+    // performanceTime: {
+    //   type: String,
+    //   required: [true, "Performance time is required"],
+    // },
+    startTime: { type: String, required: true },
+    endTime: { type: String, required: true },
     instruments: {
       type: [String],
       default: [],
     },
 
-    gallery: [
-      {
-        url: { type: String, required: true },
-        key: { type: String },
-      },
-    ],
+    galleryImages: [String],
 
     isActive: { type: Boolean, default: true },
   },

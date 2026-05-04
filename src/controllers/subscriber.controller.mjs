@@ -30,7 +30,6 @@ export const addSubscribers = catchAsync(async (req, res, next) => {
     if (error.code === 11000) {
       return next(new AppError("Email already subscribed", 400));
     }
-
     return next(error);
   }
 });

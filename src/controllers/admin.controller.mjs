@@ -9,6 +9,7 @@ import bookingTypemodel from "../models/bookingType.mjs";
 import mongoose, { mongo } from "mongoose";
 import venueModel from "../models/venueModel.js";
 import categoryModel from "../models/categoryModel.js";
+import { pipeline } from "stream";
 
 // ================= TOKEN FUNCTIONS =================
 
@@ -208,7 +209,7 @@ export const addVolunteer = catchAsync(async (req, res, next) => {
   if (!mongoose.Types.ObjectId.isValid(admin_id)) {
     return next(new AppError("Invalid Admin Signature", 401));
   }
-  const requiredFields = ["name", "email"];
+  const requiredFields = ["name", "email", "contact", "profilePicture", "role"];
 
   const missingField = requiredFields.find(
     (field) => !req.body[field] || req.body[field].toString().trim() === "",
@@ -218,7 +219,7 @@ export const addVolunteer = catchAsync(async (req, res, next) => {
     return next(new AppError(`${missingField} is missing`, 400));
   }
 
-  const { name, email } = req.body;
+  const { name, email, contact, profilePicture, role } = req.body;
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
@@ -234,6 +235,9 @@ export const addVolunteer = catchAsync(async (req, res, next) => {
     name,
     email,
     password: hashedPassword,
+    contact,
+    profilePicture,
+    role,
   });
   if (!volunteer) {
     return next(new AppError("failed to add volunteer", 400));
@@ -265,7 +269,7 @@ export const loginVolunteer = catchAsync(async (req, res, next) => {
   if (!isValunteer) {
     return next(new AppError("Invalid Eamil", 400));
   }
-  if (!isValunteer?.active) {
+  if (!isValunteer?.isActive) {
     return next(
       new AppError("Your account has been temporarily disabled", 403),
     );
@@ -286,9 +290,10 @@ export const loginVolunteer = catchAsync(async (req, res, next) => {
 });
 
 //  Disable Volunteer
-export const disableVolunteer = catchAsync(async (params) => {
+export const disableVolunteer = catchAsync(async (req, res, next) => {
   const { admin_id } = req;
   const { id } = req.params;
+  const { disable } = req.body;
   if (!admin_id) {
     return next(new AppError("Admin Authentication Failed", 401));
   }
@@ -301,16 +306,11 @@ export const disableVolunteer = catchAsync(async (params) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return next(new AppError("invalid volunteer id"));
   }
-  const isAdmin = await adminModel.findOne({ _id: admin_id });
-  if (!isAdmin) {
-    return next(new AppError("Invalid Admin", 400));
-  }
-  const result = await volunteerModel.findOne({ _id: id });
+  const result = await volunteerModel.findByIdAndUpdate(id, {
+    $set: { isActive: !disable },
+  });
   if (!result) {
-    return next(new AppError("volunteer not found", 400));
-  }
-  if (!result?.active) {
-    return next(new AppError("Volunterr already disable", 400));
+    return next(new AppError("taks failed", 400));
   }
   return sendSuccess(res, "success", {}, 201, true);
 });
@@ -318,17 +318,136 @@ export const disableVolunteer = catchAsync(async (params) => {
 // get all volunteer
 export const getAllVolunteerController = catchAsync(async (req, res, next) => {
   const { admin_id } = req;
+  const { search } = req.query;
+
   if (!admin_id) {
     return next(new AppError("Admin Authentication Failed", 401));
   }
+
   if (!mongoose.Types.ObjectId.isValid(admin_id)) {
     return next(new AppError("Invalid Admin Signature"));
   }
-  const query = {
-    active: true,
-  };
-  if (req?.body?.status) {
+
+  // Pagination
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  //  pipeline
+  let pipeline = [];
+
+  //  Search condition
+  if (search && search.trim() !== "") {
+    pipeline.push({
+      $match: {
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+          { contact: { $regex: search, $options: "i" } },
+          { role: { $regex: search, $options: "i" } },
+        ],
+      },
+    });
   }
+
+  // Sorting + Pagination
+  pipeline.push(
+    { $sort: { createdAt: -1 } },
+    { $skip: skip },
+    { $limit: limit },
+
+    // Remove unwanted fields
+    {
+      $project: {
+        password: 0,
+        __v: 0,
+        updatedAt: 0,
+      },
+    },
+  );
+
+  //  Count query (for pagination)
+  let countQuery = {};
+  if (search && search.trim() !== "") {
+    countQuery.$or = [
+      { name: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
+      { contact: { $regex: search, $options: "i" } },
+      { role: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  const [result, total] = await Promise.all([
+    volunteerModel.aggregate(pipeline),
+    volunteerModel.countDocuments(countQuery),
+  ]);
+
+  if (!result) {
+    return next(new AppError("No volunteers found", 404));
+  }
+
+  return sendSuccess(
+    res,
+    "success",
+    {
+      data: result,
+      pagination: {
+        total,
+        page,
+        pages: Math.ceil(total / limit),
+      },
+    },
+    200,
+    true,
+  );
+});
+
+// get single volunteer
+export const getSingleVolunteer = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return next(new AppError("Invalid volunteer id", 400));
+  }
+  const result = await volunteerModel
+    .findOne({ _id: id })
+    .select("-__v -password -createdAt -updatedAt")
+    .lean();
+
+  if (!result) {
+    return next(new AppError("data not found", 400));
+  }
+  return sendSuccess(res, "success", result, 200, true);
+});
+
+// update volunteer
+export const updateVolunteer = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  if (!id) {
+    return next(new AppError("volunteer id missing", 400));
+  }
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return next(new AppError("Invalid volunteer id", 400));
+  }
+  const { name, email, role, contact, profilePicture } = req.body;
+  const result = await volunteerModel.findByIdAndUpdate(
+    id,
+    {
+      ...(name && { name }),
+      ...(email && { email }),
+      ...(contact && { contact }),
+      ...(profilePicture && { profilePicture }),
+      ...(role && { role }),
+    },
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+  if (!result) {
+    return next(new AppError("volunteer not found", 400));
+  }
+  return sendSuccess(res, "updaet complete", {}, 201, true);
 });
 
 // <--------- Volunteer End Here -------------->
@@ -523,7 +642,7 @@ export const addVenueController = catchAsync(async (req, res, next) => {
     return next(new AppError("Admin authentication failed", 401));
   }
 
-  const { venue, address, image } = req.body;
+  const { venue, address, image, city } = req.body;
   const requiredField = ["venue", "address", "image"];
   const missingFields = requiredField.find(
     (field) => !req.body[field] || req.body[field].toString().trim() === "",
@@ -535,6 +654,7 @@ export const addVenueController = catchAsync(async (req, res, next) => {
     venue,
     address,
     image,
+    city,
   };
   const result = await venueModel.create(payload);
   if (!result) {
@@ -551,7 +671,7 @@ export const updateVenueController = catchAsync(async (req, res, next) => {
   }
 
   const { id } = req.params;
-  const { venue, address, image } = req.body;
+  const { venue, address, image, city } = req.body;
 
   // Validate id
   if (!id || !mongoose.Types.ObjectId.isValid(id)) {
@@ -559,7 +679,7 @@ export const updateVenueController = catchAsync(async (req, res, next) => {
   }
 
   // Check if at least one field is provided
-  if (!venue && !address && !image) {
+  if (!venue && !address && !image && !city) {
     return next(new AppError("At least one field is required to update", 400));
   }
 
@@ -568,6 +688,7 @@ export const updateVenueController = catchAsync(async (req, res, next) => {
   if (venue) payload.venue = venue;
   if (address) payload.address = address;
   if (image) payload.image = image;
+  if (city) payload.city = city;
 
   const updatedVenue = await venueModel.findByIdAndUpdate(id, payload, {
     new: true,
@@ -578,13 +699,7 @@ export const updateVenueController = catchAsync(async (req, res, next) => {
     return next(new AppError("Venue not found or update failed", 404));
   }
 
-  return sendSuccess(
-    res,
-    "Venue updated successfully",
-    updatedVenue,
-    200,
-    true,
-  );
+  return sendSuccess(res, "Venue updated successfully", {}, 200, true);
 });
 
 export const deleteVenueController = catchAsync(async (req, res, next) => {
@@ -600,7 +715,7 @@ export const deleteVenueController = catchAsync(async (req, res, next) => {
   }
   const result = await venueModel.updateOne(
     { _id: id },
-    { $set: { isDelete: true } },
+    { $set: { isActive: true } },
   );
   if (result.modifiedCount === 0) {
     return next(new AppError("failed to delete", 400));
@@ -620,11 +735,232 @@ export const getSingleVenueDetailsController = catchAsync(
     if (!id) {
       return next(new AppError("venue id missing", 400));
     }
-    const result = await venueModel.findOne({ _id: id, isDelete: false });
+    const result = await venueModel.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(id) } },
+
+      {
+        $lookup: {
+          from: "events",
+          localField: "_id",
+          foreignField: "venueName",
+          as: "events",
+        },
+      },
+
+      {
+        $addFields: {
+          totalEvents: { $size: "$events" },
+        },
+      },
+      {
+        $project: {
+          venue: 1,
+          address: 1,
+          image: 1,
+          _id: 1,
+          city: 1,
+          events: "$totalEvents",
+          isActive: "$isActive",
+        },
+      },
+    ]);
     if (!result) {
       return next(new AppError("venue not found", 400));
     }
-    return sendSuccess(res, "success", {}, 200, true);
+    return sendSuccess(res, "success", result[0], 200, true);
+  },
+);
+
+// export const getAllVanueList = catchAsync(async (req, res, next) => {
+//   const adminId = req.admin_id;
+//   if (!adminId || !mongoose.Types.ObjectId.isValid(adminId)) {
+//     return next(new AppError("Admin authentication failed", 401));
+//   }
+
+//   // Pagination (important for scaling)
+//   const page = parseInt(req.query.page) || 1;
+//   const limit = parseInt(req.query.limit) || 10;
+//   const skip = (page - 1) * limit;
+
+//   // Fetch data
+//   const [result, total] = await Promise.all([
+//     venueModel.aggregate([
+//       { $sort: { created: -1 } },
+//       { $skip: skip },
+//       { $limit: limit },
+
+//       {
+//         $lookup: {
+//           from: "events",
+//           localField: "_id",
+//           foreignField: "venueName",
+//           as: "events",
+//         },
+//       },
+
+//       {
+//         $addFields: {
+//           totalEvents: { $size: "$events" },
+//         },
+//       },
+//       {
+//         $project: {
+//           venue: 1,
+//           address: 1,
+//           image: 1,
+//           _id: 1,
+//           city: 1,
+//           events: "$totalEvents",
+//           isActive: "$isActive",
+//         },
+//       },
+//     ]),
+//   ]);
+//   // const result = await venueModel
+//   //   .find({ isDelete: false })
+//   //   .select("venue address image _id city")
+//   //   .sort({ createdAt: -1 })
+//   //   .skip(skip)
+//   //   .limit(limit);
+
+//   // const total = await bookingTypemodel.countDocuments({ isDelete: false });
+
+//   return sendSuccess(
+//     res,
+//     "success",
+//     {
+//       data: result,
+//       pagination: {
+//         total,
+//         page,
+//         pages: Math.ceil(total / limit),
+//       },
+//     },
+//     200,
+//     true,
+//   );
+// });
+
+export const getAllVanueList = catchAsync(async (req, res, next) => {
+  const adminId = req.admin_id;
+  const { search } = req.query;
+  // console.log("search", search);
+  if (!adminId || !mongoose.Types.ObjectId.isValid(adminId)) {
+    return next(new AppError("Admin authentication failed", 401));
+  }
+
+  // Pagination
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  // Build pipeline dynamically
+  let pipeline = [];
+
+  //  Apply search ONLY if provided
+  if (search && search.trim() !== "") {
+    pipeline.push({
+      $match: {
+        $or: [
+          { venue: { $regex: search, $options: "i" } },
+          { address: { $regex: search, $options: "i" } },
+          { city: { $regex: search, $options: "i" } },
+        ],
+      },
+    });
+  }
+
+  //  aggregation
+  pipeline.push(
+    { $sort: { created: -1 } },
+    { $skip: skip },
+    { $limit: limit },
+    {
+      $lookup: {
+        from: "events",
+        localField: "_id",
+        foreignField: "venueName",
+        as: "events",
+      },
+    },
+    {
+      $addFields: {
+        totalEvents: { $size: "$events" },
+      },
+    },
+    {
+      $project: {
+        venue: 1,
+        address: 1,
+        image: 1,
+        _id: 1,
+        city: 1,
+        events: "$totalEvents",
+        isActive: 1,
+      },
+    },
+  );
+
+  //  Count query (same condition)
+  let countQuery = {};
+  if (search && search.trim() !== "") {
+    countQuery.venue = { $regex: search, $options: "i" };
+  }
+
+  const [result, total] = await Promise.all([
+    venueModel.aggregate(pipeline),
+    venueModel.countDocuments(countQuery),
+  ]);
+
+  return sendSuccess(
+    res,
+    "success",
+    {
+      data: result,
+      pagination: {
+        total,
+        page,
+        pages: Math.ceil(total / limit),
+      },
+    },
+    200,
+    true,
+  );
+});
+
+export const statusUpdateVenueController = catchAsync(
+  async (req, res, next) => {
+    console.log("disable", req.body);
+    const adminId = req.admin_id;
+    const { disable } = req.body;
+
+    //  Admin check
+    if (!adminId || !mongoose.Types.ObjectId.isValid(adminId)) {
+      return next(new AppError("Admin authentication failed", 401));
+    }
+
+    const { id } = req.params;
+
+    //  Validate ID
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return next(new AppError("Invalid category id", 400));
+    }
+
+    const deletedCategory = await venueModel.findByIdAndUpdate(id, {
+      $set: { isActive: !disable },
+    });
+
+    if (!deletedCategory) {
+      return next(new AppError("Venue not found", 404));
+    }
+
+    return sendSuccess(
+      res,
+      `Venue ${disable ? "enable" : "disable"} successfully`,
+      {},
+      200,
+      true,
+    );
   },
 );
 
@@ -633,7 +969,7 @@ export const getSingleVenueDetailsController = catchAsync(
 // < ------------- Category Start ------------>
 export const addCategoryController = catchAsync(async (req, res, next) => {
   const adminId = req.admin_id;
-
+  const { search } = req.query;
   if (!adminId || !mongoose.Types.ObjectId.isValid(adminId)) {
     return next(new AppError("Admin authentication failed", 401));
   }
@@ -641,7 +977,10 @@ export const addCategoryController = catchAsync(async (req, res, next) => {
   if (!categoryName || !picture) {
     return next(new AppError(`caetgory details missing`, 400));
   }
-  const result = await categoryModel.create({ categoryName, picture });
+  const result = await categoryModel.create({
+    categoryName: categoryName.toLowerCase(),
+    picture,
+  });
   if (!result) {
     return next(new AppError("failed to add", 400));
   }
@@ -655,16 +994,43 @@ export const getSingleCategoryController = catchAsync(
       return next(new AppError("Invalid category id", 400));
     }
 
-    const category = await categoryModel.findById(id);
+    const category = await categoryModel.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(id) } },
+
+      {
+        $lookup: {
+          from: "events",
+          localField: "_id",
+          foreignField: "category",
+          as: "events",
+        },
+      },
+
+      {
+        $addFields: {
+          totalEvents: { $size: "$events" },
+        },
+      },
+
+      {
+        $project: {
+          _id: 1,
+          categoryName: 1,
+          picture: 1,
+          totalEvents: 1,
+          isActive: "$status",
+        },
+      },
+    ]);
 
     if (!category) {
       return next(new AppError("Category not found", 404));
     }
-
+    console.log("sngle co", category);
     return sendSuccess(
       res,
       "Category fetched successfully",
-      category,
+      category[0],
       200,
       true,
     );
@@ -672,16 +1038,60 @@ export const getSingleCategoryController = catchAsync(
 );
 export const getAllCategoryController = catchAsync(async (req, res, next) => {
   let { page = 1, limit = 10 } = req.query;
+  const { search } = req.query;
 
-  // convert to number
   page = parseInt(page);
   limit = parseInt(limit);
 
   const skip = (page - 1) * limit;
+  let pipeline = [];
+  if (search && search.trim() !== "") {
+    pipeline.push({
+      $match: {
+        categoryName: { $regex: search, $options: "i" },
+      },
+    });
+  }
 
+  // aggregation
+
+  pipeline.push(
+    { $sort: { createdAt: -1 } },
+    { $skip: skip },
+    { $limit: limit },
+
+    {
+      $lookup: {
+        from: "events",
+        localField: "_id",
+        foreignField: "category",
+        as: "events",
+      },
+    },
+
+    {
+      $addFields: {
+        totalEvents: { $size: "$events" },
+      },
+    },
+
+    {
+      $project: {
+        _id: 1,
+        categoryName: 1,
+        picture: 1,
+        totalEvents: 1,
+        isActive: "$status",
+      },
+    },
+  );
+  let countQuery = {};
+  if (search && search.trim() !== "") {
+    countQuery.categoryName = { $regex: search, $options: "i" };
+  }
   const [categories, total] = await Promise.all([
-    categoryModel.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
-    categoryModel.countDocuments(),
+    categoryModel.aggregate(pipeline),
+    categoryModel.countDocuments(countQuery),
   ]);
 
   const totalPages = Math.ceil(total / limit);
@@ -705,7 +1115,7 @@ export const getAllCategoryController = catchAsync(async (req, res, next) => {
 
 export const updateCategoryController = catchAsync(async (req, res, next) => {
   const adminId = req.admin_id;
-
+  //
   //  Admin check
   if (!adminId || !mongoose.Types.ObjectId.isValid(adminId)) {
     return next(new AppError("Admin authentication failed", 401));
@@ -741,36 +1151,42 @@ export const updateCategoryController = catchAsync(async (req, res, next) => {
     return next(new AppError("Category not found", 404));
   }
 
-  return sendSuccess(
-    res,
-    "Category updated successfully",
-    updatedCategory,
-    200,
-    true,
-  );
+  return sendSuccess(res, "Category updated successfully", {}, 200, true);
 });
 
-export const deleteCategoryController = catchAsync(async (req, res, next) => {
-  const adminId = req.admin_id;
+export const statusUpdateCategoryController = catchAsync(
+  async (req, res, next) => {
+    console.log("disable", req.body);
+    const adminId = req.admin_id;
+    const { disable } = req.body;
 
-  //  Admin check
-  if (!adminId || !mongoose.Types.ObjectId.isValid(adminId)) {
-    return next(new AppError("Admin authentication failed", 401));
-  }
+    //  Admin check
+    if (!adminId || !mongoose.Types.ObjectId.isValid(adminId)) {
+      return next(new AppError("Admin authentication failed", 401));
+    }
 
-  const { id } = req.params;
+    const { id } = req.params;
 
-  //  Validate ID
-  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-    return next(new AppError("Invalid category id", 400));
-  }
+    //  Validate ID
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return next(new AppError("Invalid category id", 400));
+    }
 
-  const deletedCategory = await categoryModel.findByIdAndDelete(id);
+    const deletedCategory = await categoryModel.findByIdAndUpdate(id, {
+      $set: { status: !disable },
+    });
 
-  if (!deletedCategory) {
-    return next(new AppError("Category not found", 404));
-  }
+    if (!deletedCategory) {
+      return next(new AppError("Category not found", 404));
+    }
 
-  return sendSuccess(res, "Category deleted successfully", {}, 200, true);
-});
+    return sendSuccess(
+      res,
+      `Category ${disable ? "enable" : "disable"} successfully`,
+      {},
+      200,
+      true,
+    );
+  },
+);
 // < ------------- Category End --------------->

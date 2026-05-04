@@ -7,17 +7,26 @@ import {
   adminLogin,
   adminRegister,
   deleteBookingType,
+  disableVolunteer,
   getAllBookingTypes,
   getAllCategoryController,
+  getAllVanueList,
+  getAllVolunteerController,
   getSingleBookingType,
   getSingleCategoryController,
+  getSingleVolunteer,
   loginVolunteer,
+  statusUpdateCategoryController,
   updateBookingType,
   updateCategoryController,
+  updateVolunteer,
 } from "../controllers/admin.controller.mjs";
 import { logoutAdmin } from "../controllers/admin.controller.mjs";
 
-import { getSignature } from "../controllers/cloudinary.controller.mjs";
+import {
+  deleteFromClodinary,
+  getSignature,
+} from "../controllers/cloudinary.controller.mjs";
 import {
   accessMiddleware,
   AuthMiddleware,
@@ -33,13 +42,42 @@ adminRouter.get(
   accessMiddleware("admin"),
   getSignature,
 );
-
+adminRouter.delete(
+  "/delete-upload",
+  AuthMiddleware,
+  accessMiddleware("admin"),
+  deleteFromClodinary,
+);
 // volunteers requestt
 adminRouter.post(
-  "/add-volunteer",
+  "/volunteer",
   AuthMiddleware,
   accessMiddleware("admin"),
   addVolunteer,
+);
+adminRouter.get(
+  "/volunteer",
+  AuthMiddleware,
+  accessMiddleware("admin"),
+  getAllVolunteerController,
+);
+adminRouter.get(
+  "/volunteer/:id",
+  AuthMiddleware,
+  accessMiddleware("admin"),
+  getSingleVolunteer,
+);
+adminRouter.delete(
+  "/volunteer/:id",
+  AuthMiddleware,
+  accessMiddleware("admin"),
+  disableVolunteer,
+);
+adminRouter.put(
+  "/volunteer/:id",
+  AuthMiddleware,
+  accessMiddleware("admin"),
+  updateVolunteer,
 );
 adminRouter.post("/login-volunteer", loginVolunteer);
 
@@ -78,33 +116,51 @@ adminRouter.get(
 adminRouter.post(
   "/add-category",
   AuthMiddleware,
-  accessMiddleware,
+  accessMiddleware("admin"),
   addCategoryController,
 );
 adminRouter.get(
-  "/getAll-category",
+  "/category",
   AuthMiddleware,
-  accessMiddleware,
+  accessMiddleware("admin"),
   getAllCategoryController,
 );
 adminRouter.get(
-  "/getSingle-category/:id",
+  "/category/:id",
   AuthMiddleware,
-  accessMiddleware,
+  accessMiddleware("admin"),
   getSingleCategoryController,
 );
 adminRouter.put(
-  "/add-category/:id",
+  "/category/:id",
   AuthMiddleware,
-  accessMiddleware,
+  accessMiddleware("admin"),
   updateCategoryController,
+);
+adminRouter.delete(
+  "/category/:id",
+  AuthMiddleware,
+  accessMiddleware("admin"),
+  statusUpdateCategoryController,
 );
 
 // venue router
-adminRouter.post(
-  "/add-venue",
-  AuthMiddleware,
-  accessMiddleware("admin"),
-  addVenueController,
-);
+// adminRouter.post(
+//   "/add-venue",
+//   AuthMiddleware,
+//   accessMiddleware("admin"),
+//   addVenueController,
+// );
+// adminRouter.get(
+//   "/all",
+//   AuthMiddleware,
+//   accessMiddleware("admin"),
+//   getAllVanueList,
+// );
+// adminRouter.post(
+//   "/add-venue",
+//   AuthMiddleware,
+//   accessMiddleware("admin"),
+//   addVenueController,
+// );
 export default adminRouter;

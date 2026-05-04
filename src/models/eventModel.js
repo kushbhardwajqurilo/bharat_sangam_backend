@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const eventSchema = new mongoose.Schema(
   {
@@ -7,6 +7,14 @@ const eventSchema = new mongoose.Schema(
       required: [true, "Event name is required"],
       trim: true,
     },
+    category: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        required: [true, " category is required"],
+        trim: true,
+        ref: "category",
+      },
+    ],
     description: {
       type: String,
       default: "",
@@ -23,7 +31,11 @@ const eventSchema = new mongoose.Schema(
       required: [true, "Event date is required"],
     },
 
-    time: {
+    startTime: {
+      type: String, // you can also use Date if combining date+time
+      required: [true, "Event time is required"],
+    },
+    endTime: {
       type: String, // you can also use Date if combining date+time
       required: [true, "Event time is required"],
     },
@@ -37,12 +49,13 @@ const eventSchema = new mongoose.Schema(
 
     hashTags: [String],
 
-    bookingType: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "booking",
-      required: [true, "Booking type is required"],
-    },
-
+    bookingType: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "booking",
+        required: [true, "Booking type is required"],
+      },
+    ],
     sponsors: [
       {
         type: String, // OR you can make separate Sponsor model later
@@ -63,10 +76,12 @@ const eventSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+
     eventBanner: {
       type: String,
       default: "",
     },
+
     maxSeats: {
       type: Number,
       default: 100,

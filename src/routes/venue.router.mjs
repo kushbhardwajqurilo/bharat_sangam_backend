@@ -6,10 +6,13 @@ import {
 import {
   addVenueController,
   deleteVenueController,
+  getAllVanueList,
   getAllVolunteerController,
   getSingleVenueDetailsController,
+  statusUpdateVenueController,
   updateVenueController,
 } from "../controllers/admin.controller.mjs";
+import { getAllEvents } from "../controllers/event.controller.mjs";
 const venueRouter = express.Router();
 venueRouter.post(
   "/",
@@ -17,18 +20,19 @@ venueRouter.post(
   accessMiddleware("admin"),
   addVenueController,
 );
+venueRouter.get(
+  "/all-venue",
+  AuthMiddleware,
+  accessMiddleware("admin"),
+  getAllVanueList,
+);
 venueRouter.put(
   "/:id",
   AuthMiddleware,
   accessMiddleware("admin"),
   updateVenueController,
 );
-venueRouter.delete(
-  "/:id",
-  AuthMiddleware,
-  accessMiddleware("admin"),
-  deleteVenueController,
-);
+
 venueRouter.get(
   "/:id",
   AuthMiddleware,
@@ -40,6 +44,12 @@ venueRouter.get(
   AuthMiddleware,
   accessMiddleware("admin"),
   getAllVolunteerController,
+);
+venueRouter.delete(
+  "/:id",
+  AuthMiddleware,
+  accessMiddleware("admin"),
+  statusUpdateVenueController,
 );
 
 export default venueRouter;

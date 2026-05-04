@@ -1,6 +1,7 @@
 import contactModel from "../models/contactModel.mjs";
 import { AppError, catchAsync, sendSuccess } from "../utils/handler.mjs";
 
+// query add
 export const contactController = catchAsync(async (req, res, next) => {
   const requiredFields = ["fullName", "email", "phone", "query"];
   const missingField = requiredFields.find(
@@ -26,4 +27,35 @@ export const contactController = catchAsync(async (req, res, next) => {
     return next(new AppError("failed to sumbit", 400));
   }
   return sendSuccess(res, "success", {}, 200, true);
+});
+
+// get  all query
+export const getAllQuery = catchAsync(async (req, res, next) => {
+  let { page = 1, limit = 10 } = req.query;
+  const search = req.query;
+  page = parseInt(page);
+  limit = parseInt(limit);
+  const skip = (page - 1) * limit;
+  let pipeline = [];
+  if (search && search.trim() !== "") {
+    pipeline.push({
+      $match: {
+        fullName: { $regex: search, $options: "i" },
+        contact: { $regex: search, $options: "i" },
+        query: { $regex: search, $options: "i" },
+        email: { $regex: search, $options: "i" },
+      },
+    });
+  }
+
+  // without search pipelines
+  pipeline.push(
+    { $sort: { createdAt: -1 } },
+    { $skip: skip },
+    { $limit: limit },
+  );
+  let countQuery = {};
+  if (search && search.trim() !== "") {
+    // ``
+  }
 });

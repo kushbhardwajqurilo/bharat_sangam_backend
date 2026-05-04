@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
 const venueSchema = new mongoose.Schema(
   {
+    city: { type: String, required: [true, "city required"] },
     venue: { type: String, required: [true, "venue required"] },
     address: { type: String, required: [true, "venue required"] },
     image: { type: String, default: null },
-    isDelete: { type: Boolean, default: false },
+    isActive: { type: Boolean, default: true },
   },
   { timestamps: true },
 );

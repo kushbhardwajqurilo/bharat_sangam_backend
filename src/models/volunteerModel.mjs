@@ -16,7 +16,10 @@ const volunteerSchema = new mongoose.Schema(
       type: String,
       required: [true],
     },
-    active: { type: Boolean, default: false },
+    profilePicture: { type: String, required: true },
+    contact: { type: String, required: true },
+    role: { type: String, required: true },
+    isActive: { type: Boolean, default: true },
   },
   { timestamps: true },
 );

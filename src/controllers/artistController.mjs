@@ -3,15 +3,17 @@ import artistModel from "../models/artistMode.js";
 import { AppError, catchAsync, sendSuccess } from "../utils/handler.mjs";
 
 export const addArtistController = catchAsync(async (req, res, next) => {
+  console.log("artist body", req.body);
   const {
     artistName,
     profileImage,
-    about,
+    aboutArtist,
     email,
     contactNo,
-    performanceTime,
+    startTime,
+    endTime,
     instruments,
-    gallery,
+    galleryImages,
   } = req.body;
   // 🔹 Basic validation
   if (!artistName?.trim()) {
@@ -30,7 +32,7 @@ export const addArtistController = catchAsync(async (req, res, next) => {
     return next(new AppError("instruments must be a non-empty array", 400));
   }
 
-  if (!Array.isArray(gallery) || gallery.length === 0) {
+  if (!Array.isArray(galleryImages) || galleryImages.length === 0) {
     return next(new AppError("gallery must be a non-empty array", 400));
   }
 
@@ -50,12 +52,13 @@ export const addArtistController = catchAsync(async (req, res, next) => {
   const artist = await artistModel.create({
     artistName,
     profileImage,
-    about,
+    about: aboutArtist,
     email,
     contactNo,
-    performanceTime,
+    startTime,
+    endTime,
     instruments,
-    gallery,
+    galleryImages,
   });
 
   return sendSuccess(res, "Artist added successfully", {}, 201, true);
@@ -68,15 +71,17 @@ export const updateArtistController = catchAsync(async (req, res, next) => {
   const {
     artistName,
     profileImage,
-    about,
+    aboutArtist,
     email,
     contactNo,
-    performanceTime,
+    startTime,
+    endTime,
+    // performanceTime,
     instruments,
     gallery,
     isActive = true,
   } = req.body;
-
+  const about = aboutArtist;
   // 🔹 Check artist exists
   const artist = await artistModel.findById(id);
   if (!artist) {
@@ -121,8 +126,9 @@ export const updateArtistController = catchAsync(async (req, res, next) => {
       ...(profileImage && { profileImage }),
       ...(about && { about }),
       ...(email && { email }),
+      ...(startTime && { startTime }),
+      ...(endTime && { endTime }),
       ...(contactNo && { contactNo }),
-      ...(performanceTime && { performanceTime }),
       ...(instruments && { instruments }),
       ...(gallery && { gallery }),
     },
@@ -159,8 +165,19 @@ export const getArtistDetails = catchAsync(async (req, res, next) => {
   if (!result) {
     return next(new AppError("Artist not found", 404));
   }
-
-  return sendSuccess(res, "success", result, 200, true);
+  const finalData = {
+    _id: result?._id,
+    artistName: result?.artistName,
+    profileImage: result?.profileImage,
+    aboutArtist: result?.about,
+    email: result?.email,
+    contactNo: result?.contactNo,
+    startTime: result?.startTime,
+    endTime: result?.endTime,
+    instruments: result?.instruments,
+    galleryImages: result?.galleryImages,
+  };
+  return sendSuccess(res, "success", finalData, 200, true);
 });
 
 export const getAllArtistList = catchAsync(async (req, res, next) => {
@@ -193,19 +210,24 @@ export const getAllArtistList = catchAsync(async (req, res, next) => {
 
   const artists = await artistModel
     .find(filter)
-    .select("artistName profileImage email contactNo performanceTime")
+    .select(
+      "artistName  email contactNo profileImage about startTime endTime instruments galleryImages",
+    )
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
     .lean();
-
+  const finalData = artists.map(({ about, ...rest }) => ({
+    ...rest,
+    aboutArtist: about,
+  }));
   const total = await artistModel.countDocuments(filter);
 
   return sendSuccess(
     res,
     "Artist list fetched successfully",
     {
-      data: artists,
+      data: finalData,
       pagination: {
         total,
         page,

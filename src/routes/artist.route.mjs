@@ -30,13 +30,13 @@ artistRouter.delete(
   deleteArtistController,
 );
 artistRouter.get(
-  "/single/:id",
+  "/:id",
   AuthMiddleware,
   accessMiddleware("admin"),
   getArtistDetails,
 );
 artistRouter.get(
-  "/all",
+  "/",
   AuthMiddleware,
   accessMiddleware("admin"),
   getAllArtistList,
