@@ -2,6 +2,9 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+
 import { errorHandle } from "./src/utils/handler.mjs";
 
 import adminRouter from "./src/routes/admin.route.mjs";
@@ -16,32 +19,63 @@ import sponsorRouter from "./src/routes/sponsor.route.mjs";
 
 const app = express();
 
-// ================= MIDDLEWARE =================
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+/* ================= CORE SETTINGS ================= */
 
-// 🔥 DEBUG (keep for now)
+//  IMPORTANT (for VPS + Nginx)
+app.set("trust proxy", 1);
+
+// Disable Express fingerprint
+app.disable("x-powered-by");
+
+/* ================= MIDDLEWARE ================= */
+
+// Body limit (DoS protection)
+app.use(express.json({ limit: "20kb" }));
+app.use(express.urlencoded({ extended: true, limit: "20kb" }));
+
+// Security headers
+app.use(helmet());
+
+// 🚫 Block common attack paths (.env etc)
 app.use((req, res, next) => {
-  console.log("🔥 HIT:", req.method, req.url);
+  if (req.url.includes(".env")) {
+    console.warn("⚠️ Blocked attempt:", req.ip, req.url);
+    return res.status(403).send("Forbidden");
+  }
   next();
 });
 
-// ================= CORS =================
+// Rate limiter (API only)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many requests, try again later 🚫",
+  },
+});
+
+app.use("/api", limiter);
+
+/* ================= CORS ================= */
+
 const allowOrigins = [
-  "http://localhost:3000",
-  "https://l3zz8htl-3000.inc1.devtunnels.ms",
-  "http://209.74.88.2:3011",
-  "http://198.168.1.30:3000",
-  "https://bharatbhaktisangam.com",
-  "https://www.bharatbhaktisangam.com",
+  process.env.NODE_ENV === "production"
+    ? "https://bharatbhaktisangam.com"
+    : "http://localhost:3000",
+  process.env.NODE_ENV === "production"
+    ? "https://bharatbhaktisangam.com"
+    : "https://l3zz8htl-3000.inc1.devtunnels.ms",
 ];
 
-const corsOrigins = {
+const corsOptions = {
   origin: function (origin, callback) {
     if (!origin || allowOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.warn(`CORS blocked origin: ${origin}`);
+      console.warn(`🚫 CORS blocked: ${origin}`);
       callback(new Error("Not allowed by CORS"));
     }
   },
@@ -49,9 +83,19 @@ const corsOrigins = {
   credentials: true,
 };
 
-app.use(cors(corsOrigins));
+app.use(cors(corsOptions));
 
-// ================= HEALTH =================
+/* ================= DEBUG (optional) ================= */
+
+if (process.env.NODE_ENV !== "production") {
+  app.use((req, res, next) => {
+    console.log("🔥", req.method, req.url);
+    next();
+  });
+}
+
+/* ================= HEALTH ================= */
+
 app.get("/health", (req, res) => {
   res.status(200).json({
     status: "OK",
@@ -60,12 +104,15 @@ app.get("/health", (req, res) => {
   });
 });
 
-// ================= PATH FIX =================
+/* ================= PATH SETUP ================= */
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Static files
 app.use(express.static(path.join(__dirname, "public")));
 
+// Docs
 app.get("/api-docs", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "swagger.html"));
 });
@@ -78,23 +125,21 @@ app.get("/api-docs/postman-collection.json", (req, res) => {
   res.sendFile(path.join(__dirname, "docs", "postman_collection.json"));
 });
 
-// ================= ROUTES =================
+/* ================= ROUTES ================= */
 
-// 🔥 FIXED BASE (NO TRAILING SLASH)
 const base = "/api/v1";
 
-// test route
+// Test
 app.get("/test", (req, res) => {
   res.json({ success: true, message: "API working ✅" });
 });
 
-// ticket preview
+// Ticket preview
 app.get("/ticket", (req, res) => {
-  const filePath = path.join(__dirname, "src/templates", "ticketTemplate.html");
-  res.sendFile(filePath);
+  res.sendFile(path.join(__dirname, "src/templates", "ticketTemplate.html"));
 });
 
-// main routes
+// Main APIs
 app.use(`${base}/admin`, adminRouter);
 app.use(`${base}/booking`, BookingRouter);
 app.use(`${base}/artist`, artistRouter);
@@ -104,7 +149,9 @@ app.use(`${base}/feedback`, feedbackRouter);
 app.use(`${base}/contact`, contactRouter);
 app.use(`${base}/subscriber`, subscriberRouter);
 app.use(`${base}/sponsor`, sponsorRouter);
-// ================= 404 HANDLER =================
+
+/* ================= 404 ================= */
+
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -113,7 +160,8 @@ app.use((req, res) => {
   });
 });
 
-// ================= ERROR HANDLER =================
+/* ================= ERROR ================= */
+
 app.use(errorHandle);
 
 export default app;
