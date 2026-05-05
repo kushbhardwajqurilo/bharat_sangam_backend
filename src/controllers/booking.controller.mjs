@@ -76,17 +76,17 @@ export const createTicket = catchAsync(async (req, res, next) => {
   // console.log("🟢 STEP 1: API HIT");
 
   const u_id = `BBS${Math.floor(100000 + Math.random() * 900000)}`;
-  const isAlreadyBooked = await bookingModel
-    .findOne({ eventId: eventId, phone: phone })
-    .sort({ createdAt: -1 });
-  if (isAlreadyBooked) {
-    return next(
-      new AppError(
-        "This number has already been used for booking tickets",
-        400,
-      ),
-    );
-  }
+  // const isAlreadyBooked = await bookingModel
+  //   .findOne({ eventId: eventId, phone: phone })
+  //   .sort({ createdAt: -1 });
+  // if (isAlreadyBooked) {
+  //   return next(
+  //     new AppError(
+  //       "This number has already been used for booking tickets",
+  //       400,
+  //     ),
+  //   );
+  // }
   const ticket = await bookingModel.create({
     username,
     email,
