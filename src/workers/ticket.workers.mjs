@@ -326,14 +326,49 @@ const worker = new Worker(
       },
     ]);
 
+    const to12Hour = (time) => {
+      let [h, m] = time.split(":");
+      h = Number(h);
+
+      const ampm = h >= 12 ? "PM" : "AM";
+      h = h % 12 || 12;
+
+      return `${h}:${m} ${ampm}`;
+    };
     const finalTicket = genTicket[0];
 
     if (!finalTicket) {
       throw new Error(`No booking found for ticketId: ${ticketId}`);
     }
+    const getBase64 = async (url) => {
+      const res = await fetch(url);
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch image: ${res.statusText}`);
+      }
+
+      const arrayBuffer = await res.arrayBuffer();
+      const base64 = Buffer.from(arrayBuffer).toString("base64");
+
+      return `data:image/png;base64,${base64}`;
+    };
+
+    const logoBase64 = await getBase64("https://bbsapi.qurilo.com/logo.png");
+
+    // date conversion
+
+    const formatDate = (isoDate) => {
+      const date = new Date(isoDate);
+
+      return date.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+    };
 
     // ── 2. Build HTML & screenshot ────────────────────────────────────────────
-    const logoUrl = "https://bbsapi.qurilo.com/logo.png";
+    const logoUrl = logoBase64;
     const qr = await QRCode.toDataURL(u_id);
     const date = new Date(finalTicket?.eventDetails?.date);
     const formatted = date.toLocaleDateString("en-IN");
@@ -343,7 +378,7 @@ const worker = new Worker(
       logo: logoUrl,
       eventName: finalTicket?.eventDetails?.eventName,
       poster: finalTicket?.venueDetails?.image,
-      time: `${finalTicket?.eventDetails?.startTime} To ${finalTicket?.eventDetails?.endTime}`,
+      time: `${to12Hour(finalTicket?.eventDetails?.startTime)} To ${to12Hour(finalTicket?.eventDetails?.endTime)}`,
       qr,
       u_id,
       visitors: allowVisitors,
@@ -351,7 +386,7 @@ const worker = new Worker(
       artistName: finalTicket?.artistDetails?.[0]?.artistName,
       artistDesc: finalTicket?.artistDetails?.[0]?.about,
       location: finalTicket?.venueDetails?.venue,
-      date: formatted,
+      date: formatDate(date),
       venue: finalTicket?.venueDetails?.address,
     });
 
@@ -391,7 +426,7 @@ const worker = new Worker(
         venue: finalTicket?.venueDetails?.address,
         date: formatted,
         // ✅ FIX 3: was `eventDetails.time` which doesn't exist
-        time: `${finalTicket?.eventDetails?.startTime} To ${finalTicket?.eventDetails?.endTime}`,
+        time: `${to12Hour(finalTicket?.eventDetails?.startTime)} To ${to12Hour(finalTicket?.eventDetails?.endTime)}`,
       },
       username,
     );
@@ -412,8 +447,8 @@ const worker = new Worker(
         username,
         finalTicket?.eventDetails?.eventName,
         finalTicket?.venueDetails?.address,
-        formatted,
-        `${finalTicket?.eventDetails?.startTime} To ${finalTicket?.eventDetails?.endTime}`,
+        formatDate(date),
+        `${to12Hour(finalTicket?.eventDetails?.startTime)} To ${to12Hour(finalTicket?.eventDetails?.endTime)}`,
         //  FIX 4: all placeholders must be strings
         String(allowVisitors ?? "0"),
         u_id,

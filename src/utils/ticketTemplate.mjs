@@ -1,5 +1,5 @@
 export const generateTicketHTML = (data) => {
-  // console.log("tiket data", data);
+  console.log("tiket data", data);
   return `
 <!doctype html>
 <html lang="en">
@@ -269,11 +269,9 @@ export const generateTicketHTML = (data) => {
     <!-- Header -->
     <div class="header">
       <div class="logo-placeholder">
-        <img
-          src="${data.logo}"
+        <img src="${data.logo}"
           alt="Bharat Bhakti Logo"
-          style="max-width: 100%; max-height: 70px;"
-        />
+          style="max-width: 100%; max-height: 70px;" />
       </div>
     </div>
 

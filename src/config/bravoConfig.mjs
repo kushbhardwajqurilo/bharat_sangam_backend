@@ -27,7 +27,7 @@ export const sendTicketEmailFromBravo = async (
 
     const res = await tranEmailApi.sendTransacEmail({
       sender: {
-        email: `${process.env.INFO_EMAIL}`, // testing info@bharatbhaktisangam.com
+        email: `${process.env.ORDER_EMAIL}`, // testing info@bharatbhaktisangam.com
         name: "Bharat Bhakti Sangam",
       },
 

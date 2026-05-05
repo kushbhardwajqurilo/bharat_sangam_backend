@@ -392,9 +392,10 @@ export const getAllVolunteerController = catchAsync(async (req, res, next) => {
     {
       data: result,
       pagination: {
+        limit,
         total,
         page,
-        pages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / limit),
       },
     },
     200,
@@ -605,9 +606,10 @@ export const getAllBookingTypes = catchAsync(async (req, res, next) => {
     {
       data: result,
       pagination: {
+        limit,
         total,
         page,
-        pages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / limit),
       },
     },
     200,
@@ -904,7 +906,13 @@ export const getAllVanueList = catchAsync(async (req, res, next) => {
   //  Count query (same condition)
   let countQuery = {};
   if (search && search.trim() !== "") {
-    countQuery.venue = { $regex: search, $options: "i" };
+    countQuery = {
+      $or: [
+        { venue: { $regex: search, $options: "i" } },
+        { address: { $regex: search, $options: "i" } },
+        { city: { $regex: search, $options: "i" } },
+      ],
+    };
   }
 
   const [result, total] = await Promise.all([
@@ -918,9 +926,10 @@ export const getAllVanueList = catchAsync(async (req, res, next) => {
     {
       data: result,
       pagination: {
+        limit,
         total,
         page,
-        pages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / limit),
       },
     },
     200,

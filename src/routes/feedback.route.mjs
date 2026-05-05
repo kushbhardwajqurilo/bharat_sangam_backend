@@ -1,5 +1,9 @@
 import express from "express";
-import { feedbackController } from "../controllers/feedback.contoller.mjs";
+import {
+  feedbackController,
+  getAllFeedbacks,
+} from "../controllers/feedback.contoller.mjs";
 const feedbackRouter = express.Router();
 feedbackRouter.post("/", feedbackController);
+feedbackRouter.get("/", getAllFeedbacks);
 export default feedbackRouter;

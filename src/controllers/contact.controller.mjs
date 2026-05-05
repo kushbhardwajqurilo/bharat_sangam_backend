@@ -32,7 +32,8 @@ export const contactController = catchAsync(async (req, res, next) => {
 // get  all query
 export const getAllQuery = catchAsync(async (req, res, next) => {
   let { page = 1, limit = 10 } = req.query;
-  const search = req.query;
+  const { search } = req.query;
+  console.log("search", search);
   page = parseInt(page);
   limit = parseInt(limit);
   const skip = (page - 1) * limit;
@@ -40,10 +41,12 @@ export const getAllQuery = catchAsync(async (req, res, next) => {
   if (search && search.trim() !== "") {
     pipeline.push({
       $match: {
-        fullName: { $regex: search, $options: "i" },
-        contact: { $regex: search, $options: "i" },
-        query: { $regex: search, $options: "i" },
-        email: { $regex: search, $options: "i" },
+        $or: [
+          { fullName: { $regex: search, $options: "i" } },
+          { phone: { $regex: search, $options: "i" } },
+          { query: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+        ],
       },
     });
   }
@@ -55,7 +58,64 @@ export const getAllQuery = catchAsync(async (req, res, next) => {
     { $limit: limit },
   );
   let countQuery = {};
+
   if (search && search.trim() !== "") {
-    // ``
+    countQuery = {
+      $or: [
+        { fullName: { $regex: search, $options: "i" } },
+        { phone: { $regex: search, $options: "i" } },
+        { query: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ],
+    };
   }
+  const [queries, total] = await Promise.all([
+    contactModel.aggregate(pipeline),
+    contactModel.countDocuments(countQuery),
+  ]);
+  console.log("total", total);
+  const totalPages = Math.ceil(total / limit);
+  // console.log("final", queries);
+  const finalData = queries.map(
+    ({ fullName, phone, createdAt, updatedAt, __v, ...rest }) => ({
+      ...rest,
+      name: fullName,
+      contact: phone,
+    }),
+  );
+  return sendSuccess(
+    res,
+    "query found",
+    {
+      data: finalData,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages,
+      },
+    },
+    200,
+    true,
+  );
+});
+
+// get single query
+export const getSingleQueryController = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return next(new AppError("Invalid query id", 400));
+  }
+  const query = await contactModel.findOne({ _id: id });
+  if (!query) {
+    return next(new AppError("query not found", 400));
+  }
+  const finalData = {
+    _id: query?._id,
+    name: query?.fullName,
+    contact: query?.phone,
+    query: query?.query,
+    email: query?.email,
+  };
+  return sendSuccess(res, "success", finalData, 200, true);
 });

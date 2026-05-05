@@ -76,6 +76,17 @@ export const createTicket = catchAsync(async (req, res, next) => {
   // console.log("🟢 STEP 1: API HIT");
 
   const u_id = `BBS${Math.floor(100000 + Math.random() * 900000)}`;
+  const isAlreadyBooked = await bookingModel
+    .findOne({ eventId: eventId, phone: phone })
+    .sort({ createdAt: -1 });
+  if (isAlreadyBooked) {
+    return next(
+      new AppError(
+        "This number has already been used for booking tickets",
+        400,
+      ),
+    );
+  }
   const ticket = await bookingModel.create({
     username,
     email,
@@ -86,6 +97,7 @@ export const createTicket = catchAsync(async (req, res, next) => {
     phone: Number(phone),
   });
   // Check + reduce tickets (atomic)
+
   const event = await eventModel.findOneAndUpdate(
     { _id: eventId, availableTickets: { $gte: totalTicket } },
     {
@@ -226,8 +238,28 @@ export const getTicketDetailsByPhone = catchAsync(async (req, res, next) => {
   if (!ticket) {
     return next(new AppError("ticket not found", 400));
   }
-  console.log("tiken", ticket);
   return sendSuccess(res, "success", ticket, 200, true);
 });
 
-// get all booking ids by phone number for whatsapp;
+// get all booking
+export const getAllBookings = catchAsync(async (req, res, next) => {
+  let { page = 1, limit = 10 } = req?.query;
+  const { search } = req?.query;
+
+  page = parseInt(page);
+  limit = parseInt(limit);
+
+  const pipeline = [];
+  if (search && search?.trim() !== "") {
+    pipeline.push({
+      $match: {
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { name: { $regex: search, $options: "i" } },
+          { name: { $regex: search, $options: "i" } },
+          { name: { $regex: search, $options: "i" } },
+        ],
+      },
+    });
+  }
+});

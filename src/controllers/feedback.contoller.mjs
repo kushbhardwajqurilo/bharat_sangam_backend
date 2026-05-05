@@ -52,3 +52,75 @@ export const feedbackController = catchAsync(async (req, res, next) => {
     return next(error);
   }
 });
+
+// get all feedback
+export const getAllFeedbacks = catchAsync(async (req, res, next) => {
+  let { page = 1, limit = 5 } = req.query;
+  const { search } = req?.query;
+
+  page = parseInt(page);
+  limit = parseInt(limit);
+
+  const skip = (page - 1) * limit;
+  let pipeline = [];
+  if (search && search?.trim() !== "") {
+    pipeline.push({
+      $match: {
+        $or: [
+          { fullName: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+          { message: { $regex: search, $options: "i" } },
+          { avgRating: { $regex: search, $options: "i" } },
+        ],
+      },
+    });
+  }
+
+  // main aggregate
+  pipeline.push(
+    { $sort: { createdAt: -1 } },
+    { $skip: skip },
+    { $limit: limit },
+
+    {
+      $project: {
+        _id: 1,
+        name: "$fullName",
+        rating: "$avgRating",
+        email: 1,
+        feedback: "$message",
+      },
+    },
+  );
+  let countQuery = {};
+  if (search && search?.trim() !== "") {
+    countQuery = {
+      $or: [
+        { fullName: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+        { message: { $regex: search, $options: "i" } },
+        ...(isNaN(search) ? [] : [{ avgRating: Number(search) }]),
+      ],
+    };
+  }
+  const [Feedbacks, total] = await Promise.all([
+    feedbackModel.aggregate(pipeline),
+    feedbackModel.countDocuments(countQuery),
+  ]);
+
+  return sendSuccess(
+    res,
+    "success",
+    {
+      data: Feedbacks,
+      pagination: {
+        limit,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+      },
+    },
+    200,
+    true,
+  );
+});

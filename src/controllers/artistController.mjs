@@ -229,9 +229,10 @@ export const getAllArtistList = catchAsync(async (req, res, next) => {
     {
       data: finalData,
       pagination: {
+        limit,
         total,
         page,
-        pages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / limit),
       },
     },
     200,
