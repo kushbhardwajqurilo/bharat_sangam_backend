@@ -10,6 +10,7 @@ import mongoose, { mongo } from "mongoose";
 import venueModel from "../models/venueModel.js";
 import categoryModel from "../models/categoryModel.js";
 import { pipeline } from "stream";
+import { volunteerEmailSend } from "../config/bravoConfig.mjs";
 
 // ================= TOKEN FUNCTIONS =================
 
@@ -243,6 +244,7 @@ export const addVolunteer = catchAsync(async (req, res, next) => {
     return next(new AppError("failed to add volunteer", 400));
   }
 
+  const sendMail = await volunteerEmailSend(name, email, password);
   return sendSuccess(
     res,
     "Volunteer added successfully",
@@ -562,12 +564,12 @@ export const deleteBookingType = catchAsync(async (req, res, next) => {
   if (!adminId || !mongoose.Types.ObjectId.isValid(adminId)) {
     return next(new AppError("Admin authentication failed", 401));
   }
-  const { b_id } = req.query;
-  if (!b_id) {
+  const { id } = req.params;
+  if (!id) {
     return next(new AppError("booking credential missing", 400));
   }
   const result = await bookingTypemodel.findByIdAndUpdate(
-    { _id: b_id },
+    { _id: id },
     { isDelete: true },
     { upsert: true, new: true },
   );
@@ -623,12 +625,12 @@ export const getSingleBookingType = catchAsync(async (req, res, next) => {
   if (!adminId || !mongoose.Types.ObjectId.isValid(adminId)) {
     return next(new AppError("Admin authentication failed", 401));
   }
-  const { b_id } = req.query;
-  if (!b_id) {
+  const { id } = req.params;
+  if (!id) {
     return next(new AppError("booking credential missing", 400));
   }
   const result = await bookingTypemodel
-    .findOne({ _id: b_id, isDelete: false })
+    .findOne({ _id: id, isDelete: false })
     .select("-__v -createdAt -updatedAt");
   if (!result) {
     return next(new AppError("booking not found", 200));

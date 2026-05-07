@@ -9,6 +9,7 @@ import { sendTicketEmail } from "../config/mail.config.mjs";
 import puppeteer from "puppeteer";
 import { ticketQueue } from "../queues/ticket.queue.mjs";
 import eventModel from "../models/eventModel.js";
+import mongoose from "mongoose";
 
 // export const createTicket = catchAsync(async (req, res, next) => {
 //   const {
@@ -248,18 +249,167 @@ export const getAllBookings = catchAsync(async (req, res, next) => {
 
   page = parseInt(page);
   limit = parseInt(limit);
+  const skip = (page - 1) * limit;
 
   const pipeline = [];
-  if (search && search?.trim() !== "") {
+
+  if (search && search.trim() !== "") {
     pipeline.push({
       $match: {
         $or: [
-          { name: { $regex: search, $options: "i" } },
-          { name: { $regex: search, $options: "i" } },
-          { name: { $regex: search, $options: "i" } },
-          { name: { $regex: search, $options: "i" } },
+          { username: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+          {
+            $expr: {
+              $regexMatch: {
+                input: { $toString: "$phone" },
+                regex: search,
+                options: "i",
+              },
+            },
+          },
+          { u_id: { $regex: search, $options: "i" } },
         ],
       },
     });
   }
+
+  pipeline.push(
+    { $sort: { createdAt: -1 } },
+    { $skip: skip },
+    { $limit: limit },
+
+    {
+      $lookup: {
+        from: "events",
+        let: { eventId: "$eventId" },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ["$_id", "$$eventId"] },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              eventName: 1,
+            },
+          },
+        ],
+        as: "event",
+      },
+    },
+    {
+      $unwind: {
+        path: "$event",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        name: { $ifNull: ["$username", "N/A"] },
+        email: 1,
+        tickets: "$totalTicket",
+        eventName: { $ifNull: ["$event.eventName", "N/A"] },
+        ticketId: "$u_id",
+        contact: "$phone",
+      },
+    },
+  );
+
+  //
+  let countQuery = {};
+  if (search && search.trim() !== "") {
+    countQuery = {
+      $or: [
+        { username: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+        {
+          $expr: {
+            $regexMatch: {
+              input: { $toString: "$phone" },
+              regex: search,
+              options: "i",
+            },
+          },
+        },
+        { u_id: { $regex: search, $options: "i" } },
+      ],
+    };
+  }
+
+  const [result, total] = await Promise.all([
+    bookingModel.aggregate(pipeline),
+    bookingModel.countDocuments(countQuery),
+  ]);
+
+  return sendSuccess(
+    res,
+    "success",
+    {
+      data: result,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    },
+    200,
+    true,
+  );
+});
+
+// get single Booking
+export const getSingleBookingDetails = catchAsync(async (req, res, next) => {
+  const { id } = req?.params;
+  if (!id) {
+    return next(new AppError("Booking id missing", id));
+  }
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return next(new AppError("Invalid Booking Id", 400));
+  }
+  const result = await bookingModel.aggregate([
+    { $match: { _id: id } },
+    {
+      $lookup: {
+        from: "events",
+        let: { eventId: "$eventId" },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ["$_id", "$$eventId"] },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              eventName: 1,
+            },
+          },
+        ],
+        as: "event",
+      },
+    },
+    {
+      $unwind: {
+        path: "$event",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        name: "$username",
+        email: 1,
+        tickets: "$totalTickets",
+        eventName: { ifNull: ["$event.eventName", "N/A"] },
+        ticketId: "$u_id",
+        contact: "$phone",
+      },
+    },
+  ]);
+  console.log("sinngle", result);
+  return sendSuccess(res, "success", result[0], 200, true);
 });

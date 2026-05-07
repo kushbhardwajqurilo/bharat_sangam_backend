@@ -2,12 +2,17 @@
 
 import SibApiV3Sdk from "sib-api-v3-sdk";
 import dotenv from "dotenv";
+import { catchAsync } from "../utils/handler.mjs";
 
 dotenv.config();
 // console.log("ENV Mail", process.env.EMAIL);
 //  Setup Brevo client
 const client = SibApiV3Sdk.ApiClient.instance;
 client.authentications["api-key"].apiKey = process.env.BREVO_API_KEY;
+
+// kush testing for volunteer template
+// const client = SibApiV3Sdk.ApiClient.instance;
+// client.authentications["api-key"].apiKey = process.env.KUSH_BRAVO_KEY;
 
 const tranEmailApi = new SibApiV3Sdk.TransactionalEmailsApi();
 
@@ -71,4 +76,25 @@ export const sendTicketEmailFromBravo = async (
     console.error("❌ Email error:", err.response?.body || err);
   }
 };
-//
+
+const volunteerEmailApi = new SibApiV3Sdk.TransactionalEmailsApi();
+
+export const volunteerEmailSend = catchAsync(
+  async (username, email, password) => {
+    const res = await volunteerEmailApi.sendTransacEmail({
+      sender: {
+        email: "kushqurilo@gmail.com",
+        name: "Bharat Bhakti Sangam",
+      },
+      to: [{ email }],
+      templateId: 3,
+      params: {
+        username,
+        email,
+        password,
+      },
+    });
+
+    return res;
+  },
+);

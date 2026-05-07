@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const bookingSchema = new mongoose.Schema(
   {
-    userName: String,
+    username: String,
     email: String,
     u_id: { type: String, required: [true] },
     phone: { type: Number, required: true },

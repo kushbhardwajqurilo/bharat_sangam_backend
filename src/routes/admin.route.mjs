@@ -95,19 +95,19 @@ adminRouter.put(
   updateBookingType,
 );
 adminRouter.delete(
-  "/booking-type",
+  "/booking-type/:id",
   AuthMiddleware,
   accessMiddleware("admin"),
   deleteBookingType,
 );
 adminRouter.get(
-  "/getall-bookingtype",
+  "/booking-type",
   AuthMiddleware,
   accessMiddleware("admin"),
   getAllBookingTypes,
 );
 adminRouter.get(
-  "/get-single-bookingtype",
+  "/booking-type/:id",
   AuthMiddleware,
   accessMiddleware("admin"),
   getSingleBookingType,
