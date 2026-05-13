@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { catchAsync, sendSuccess } from "../utils/handler.mjs";
+import { catchAsync, sendSuccess, AppError } from "../utils/handler.mjs";
 import cloudinaryConfig from "../config/cloudinary.mjs";
 
 export const getSignature = catchAsync(async (req, res, next) => {

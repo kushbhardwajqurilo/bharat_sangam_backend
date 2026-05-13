@@ -16,6 +16,7 @@ import feedbackRouter from "./src/routes/feedback.route.mjs";
 import contactRouter from "./src/routes/contact.route.mjs";
 import subscriberRouter from "./src/routes/subscriber.route.mjs";
 import sponsorRouter from "./src/routes/sponsor.route.mjs";
+import calendarRouter from "./src/routes/calendar.route.mjs";
 
 const app = express();
 
@@ -149,6 +150,8 @@ app.use(`${base}/feedback`, feedbackRouter);
 app.use(`${base}/contact`, contactRouter);
 app.use(`${base}/subscriber`, subscriberRouter);
 app.use(`${base}/sponsor`, sponsorRouter);
+app.use(`${base}/sponsor`, sponsorRouter);
+app.use(`${base}/calender`, calendarRouter);
 
 /* ================= 404 ================= */
 

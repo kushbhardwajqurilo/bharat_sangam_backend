@@ -43,7 +43,7 @@ adminRouter.get(
   getSignature,
 );
 adminRouter.delete(
-  "/delete-upload",
+  "/presign-url",
   AuthMiddleware,
   accessMiddleware("admin"),
   deleteFromClodinary,

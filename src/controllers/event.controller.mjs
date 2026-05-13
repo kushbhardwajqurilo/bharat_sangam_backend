@@ -599,6 +599,15 @@ export const deleteEvent = catchAsync(async (req, res, next) => {
 });
 
 export const getLatestEvent = catchAsync(async (req, res, next) => {
+  const to12Hour = (time) => {
+    let [h, m] = time.split(":");
+    h = Number(h);
+
+    const ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+
+    return `${h}:${m} ${ampm}`;
+  };
   const event = await eventModel.aggregate([
     { $sort: { createdAt: -1 } },
     { $limit: 1 },
@@ -642,7 +651,9 @@ export const getLatestEvent = catchAsync(async (req, res, next) => {
         eventName: 1,
         description: 1,
         date: 1,
-        time: { $concat: ["$startTime", " To ", "$endTime"] },
+        // time: { $concat: ["$startTime", " To ", "$endTime"] },
+        startTime: 1,
+        endTime: 1,
         tabs: 1,
         hashTags: 1,
         bookedSeats: 1,
@@ -683,7 +694,9 @@ export const getLatestEvent = catchAsync(async (req, res, next) => {
   if (!event.length) {
     return next(new AppError("Event not found", 404));
   }
-
+  event[0].time = `${to12Hour(event[0].startTime)} To ${to12Hour(event[0].endTime)}`;
+  delete event[0].startTime;
+  delete event[0].endTime;
   return sendSuccess(res, "Event fetched successfully", event[0], 200, true);
 });
 

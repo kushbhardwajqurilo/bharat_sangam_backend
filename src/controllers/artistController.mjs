@@ -78,9 +78,10 @@ export const updateArtistController = catchAsync(async (req, res, next) => {
     endTime,
     // performanceTime,
     instruments,
-    gallery,
+    galleryImages,
     isActive = true,
   } = req.body;
+  console.log("artist update request body", req.body);
   const about = aboutArtist;
   // 🔹 Check artist exists
   const artist = await artistModel.findById(id);
@@ -114,7 +115,10 @@ export const updateArtistController = catchAsync(async (req, res, next) => {
     return next(new AppError("instruments must be a non-empty array", 400));
   }
 
-  if (gallery && (!Array.isArray(gallery) || gallery.length === 0)) {
+  if (
+    galleryImages &&
+    (!Array.isArray(galleryImages) || galleryImages.length === 0)
+  ) {
     return next(new AppError("gallery must be a non-empty array", 400));
   }
 
@@ -130,7 +134,7 @@ export const updateArtistController = catchAsync(async (req, res, next) => {
       ...(endTime && { endTime }),
       ...(contactNo && { contactNo }),
       ...(instruments && { instruments }),
-      ...(gallery && { gallery }),
+      ...(galleryImages && { galleryImages }),
     },
     { new: true, runValidators: true },
   );
@@ -207,7 +211,15 @@ export const getAllArtistList = catchAsync(async (req, res, next) => {
     isActive: true,
     ...searchFilter,
   };
+  const to12Hour = (time) => {
+    let [h, m] = time.split(":");
+    h = Number(h);
 
+    const ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+
+    return `${h}:${m} ${ampm}`;
+  };
   const artists = await artistModel
     .find(filter)
     .select(
@@ -217,9 +229,11 @@ export const getAllArtistList = catchAsync(async (req, res, next) => {
     .skip(skip)
     .limit(limit)
     .lean();
-  const finalData = artists.map(({ about, ...rest }) => ({
+  const finalData = artists.map(({ about, startTime, endTime, ...rest }) => ({
     ...rest,
     aboutArtist: about,
+    startTime: to12Hour(startTime),
+    endTime: to12Hour(endTime),
   }));
   const total = await artistModel.countDocuments(filter);
 

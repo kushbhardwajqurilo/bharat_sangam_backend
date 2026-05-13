@@ -28,6 +28,7 @@
     "nodemailer": "^8.0.5",
     "puppeteer": "^24.40.0",
     "qrcode": "^1.5.4",
+    "razorpay": "^2.9.6",
     "redis.js": "^1.2.4",
     "sib-api-v3-sdk": "^8.5.0"
   },
