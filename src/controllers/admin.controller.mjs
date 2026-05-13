@@ -99,6 +99,7 @@ export const adminRegister = catchAsync(async (req, res, next) => {
 // ================= LOGIN =================
 
 export const adminLogin = catchAsync(async (req, res, next) => {
+  console.log("login request hit");
   const rquriedFields = ["email", "password"];
 
   const missingFields = rquriedFields.find(
@@ -106,47 +107,54 @@ export const adminLogin = catchAsync(async (req, res, next) => {
   );
 
   if (missingFields) {
+    console.log("missing Field", missingFields);
     return next(new AppError(`${missingFields} is missing`, 400));
   }
 
   const { email, password } = req.body;
 
-  const admin = await adminModel
-    .findOne({ email })
-    .select("_id email password role");
+  try {
+    const admin = await adminModel
+      .findOne({ email })
+      .select("_id email password role");
 
-  if (!admin) {
-    return next(new AppError("Email not exist", 400));
-  }
+    if (!admin) {
+      console.log("admin email not found");
+      return next(new AppError("Email not exist", 400));
+    }
 
-  const isMatch = await compareHashPassword(password, admin.password);
+    const isMatch = await compareHashPassword(password, admin.password);
 
-  if (!isMatch) {
-    return next(new AppError("Invalid Password", 400));
-  }
+    if (!isMatch) {
+      console.log("invalid password");
+      return next(new AppError("Invalid Password", 400));
+    }
 
-  //  Tokens
-  const access_token = generateAccessToken({
-    admin_id: admin._id,
-    role: "admin",
-  });
-
-  const refresh_token = await generateRefreshToken(
-    {
+    //  Tokens
+    const access_token = generateAccessToken({
       admin_id: admin._id,
       role: "admin",
-    },
-    "7d",
-  );
-  return sendSuccess(
-    res,
-    "Login successful",
-    {
-      access_token,
-      refresh_token,
-    },
-    200,
-  );
+    });
+
+    const refresh_token = await generateRefreshToken(
+      {
+        admin_id: admin._id,
+        role: "admin",
+      },
+      "7d",
+    );
+    return sendSuccess(
+      res,
+      "Login successful",
+      {
+        access_token,
+        refresh_token,
+      },
+      200,
+    );
+  } catch (error) {
+    console.log("Internal server Error:", error);
+  }
 });
 
 // ================= REFRESH TOKEN =================
