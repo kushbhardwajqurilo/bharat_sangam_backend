@@ -41,7 +41,7 @@ const artistSchema = new mongoose.Schema(
     },
 
     galleryImages: [String],
-
+    role: { type: String, default: "N/A" },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true },

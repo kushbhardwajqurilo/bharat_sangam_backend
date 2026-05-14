@@ -26,7 +26,7 @@ const generateAccessToken = (data) => {
   );
 };
 
-// ✅ Refresh Token (DB stored)
+//  Refresh Token (DB stored)
 const generateRefreshToken = async (user, expire = "7d") => {
   const refresh_token = jwt.sign(
     {

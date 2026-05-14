@@ -14,6 +14,7 @@ export const addArtistController = catchAsync(async (req, res, next) => {
     endTime,
     instruments,
     galleryImages,
+    role,
   } = req.body;
   // 🔹 Basic validation
   if (!artistName?.trim()) {
@@ -59,6 +60,7 @@ export const addArtistController = catchAsync(async (req, res, next) => {
     endTime,
     instruments,
     galleryImages,
+    role,
   });
 
   return sendSuccess(res, "Artist added successfully", {}, 201, true);
@@ -79,6 +81,7 @@ export const updateArtistController = catchAsync(async (req, res, next) => {
     // performanceTime,
     instruments,
     galleryImages,
+    role,
     isActive = true,
   } = req.body;
   console.log("artist update request body", req.body);
@@ -135,6 +138,7 @@ export const updateArtistController = catchAsync(async (req, res, next) => {
       ...(contactNo && { contactNo }),
       ...(instruments && { instruments }),
       ...(galleryImages && { galleryImages }),
+      ...(role && { role }),
     },
     { new: true, runValidators: true },
   );
@@ -180,6 +184,7 @@ export const getArtistDetails = catchAsync(async (req, res, next) => {
     endTime: result?.endTime,
     instruments: result?.instruments,
     galleryImages: result?.galleryImages,
+    role: result?.role,
   };
   return sendSuccess(res, "success", finalData, 200, true);
 });
@@ -223,7 +228,7 @@ export const getAllArtistList = catchAsync(async (req, res, next) => {
   const artists = await artistModel
     .find(filter)
     .select(
-      "artistName  email contactNo profileImage about startTime endTime instruments galleryImages",
+      "artistName  email contactNo profileImage about startTime endTime instruments galleryImages role",
     )
     .sort({ createdAt: -1 })
     .skip(skip)
