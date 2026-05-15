@@ -74,7 +74,7 @@ import mongoose from "mongoose";
 export const createTicket = catchAsync(async (req, res, next) => {
   const { username, email, eventId, totalTicket, phone } = req.body;
 
-  // console.log("🟢 STEP 1: API HIT");
+  console.log("🟢 STEP 1: API HIT");
 
   const u_id = `BBS${Math.floor(100000 + Math.random() * 900000)}`;
   // const isAlreadyBooked = await bookingModel

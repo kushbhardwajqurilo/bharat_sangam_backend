@@ -401,7 +401,7 @@ const worker = new Worker(
     await page.setViewport({ width: 1200, height: 1800, deviceScaleFactor: 3 });
     await page.setContent(html, { waitUntil: "networkidle0" });
 
-    const element = await page.$(".ticket");
+    const element = await page.$(".container");
     const boundingBox = await element.boundingBox();
     const buffer = await page.screenshot({ type: "png", clip: boundingBox });
     await page.close();

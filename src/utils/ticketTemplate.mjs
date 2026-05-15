@@ -1,339 +1,804 @@
 export const generateTicketHTML = (data) => {
   console.log("tiket data", data);
+
   return `
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bharat Bhakti Sangam Ticket</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: "Poppins", sans-serif;
-      font-weight: 600;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bharat Bhakti Sangam Ticket</title>
 
-    html{
-    background: transparent !important;
-    }
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-    body {
-      background: transparent !important;
-      padding: 40px 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
 
-    .ticket {
-      width: 100%;
-      max-width: 450px;
-      background:
-        radial-gradient(
-          circle at 50% 20%,
-          rgba(255, 140, 0, 0.15),
-          transparent 40%
-        ),
-        radial-gradient(
-          circle at 80% 80%,
-          rgba(255, 255, 255, 0.05),
-          transparent 50%
-        ),
-        linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 40%, #000000 100%);
-     
-      overflow: hidden;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
-      border: 1px solid #333;
-      position: relative;
-    }
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Roboto", sans-serif;
+      }
 
-    .header {
-      text-align: center;
-      padding: 25px 20px 15px;
-    }
+      html {
+        background: transparent !important;
+      }
 
-    .logo-placeholder {
-      width: 180px;
-      height: 80px;
-      margin: 0 auto 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+      body {
+        background: transparent !important;
+        padding: 40px 20px;
+        display: flex;
+        justify-content: center;
+        min-height: 100vh;
+      }
 
-    .event-subtitle {
-      color: #ffcc00;
-      font-size: 22px;
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
+      .container {
+        background-color: #000;
+        height: 835px;
+        width: 412px;
+        padding: 30px 15px;
+        position: relative;
+      }
 
-    .event-title {
-      color: #ff6600;
-      font-size: 18px;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-    }
+      .ticket {
+        width: 380px;
+        height: 775px;
 
-    .event-info {
-      padding: 20px;
-      display: flex;
-      gap: 15px;
-    }
+        background: linear-gradient(
+          180deg,
+          #1a1a1a 0%,
+          #1a1a1a 40%,
+          #2c2c2c 100%
+        );
 
-    .event-poster {
-      width: 90px;
-      height: 110px;
-      border-radius: 8px;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+        border: 1px solid #535353;
+        border-radius: 25px;
+        position: relative;
+        padding: 40px 30px;
+      }
 
-    .event-poster img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+      .header {
+        text-align: center;
+      }
 
-    .event-details {
-      flex: 1;
-      color: #fff;
-    }
+      .logo-placeholder {
+        width: 100%;
+        height: 80px;
+        margin: 0 auto 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
 
-    .event-name {
-      font-size: 20px;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
+      .logo-div {
+        width: 35%;
+      }
 
-    .event-location {
-      font-size: 15px;
-      color: #ccc;
-      margin-bottom: 8px;
-    }
+      .hr-div {
+        width: 100%;
+        margin-bottom: 25px;
+      }
 
-    .event-date {
-      font-size: 15px;
-      color: #ddd;
-      margin-bottom: 8px;
-    }
+      hr {
+        width: 100%;
+        border: none;
+        height: 1px;
 
-    .event-venue {
-      font-size: 14px;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
+        background: linear-gradient(
+          to right,
+          #191919 0%,
+          #4a4a4a 50%,
+          #191919 100%
+        );
+      }
 
-    .location-icon {
-      width: 18px;
-      height: 18px;
-      flex-shrink: 0;
-    }
+      .event-info {
+        margin-top: 25px;
+        display: flex;
+        gap: 17px;
+      }
 
-    .qr-section {
-      padding: 25px 20px;
-      text-align: center;
-    }
+      .event-poster {
+        width: 80px;
+        height: 104px;
+        border-radius: 8px;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
 
-    .qr-code {
-      background: white;
-      padding: 15px;
-      display: inline-block;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
-    }
+      .event-poster img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
 
-    .qr-code img {
-      width: 220px;
-      height: 220px;
-    }
+      .event-details {
+        flex: 1;
+        color: #fff;
+      }
 
-    .booking-id {
-      position: absolute;
-      right: 20px;
-      top: 285px;
-      writing-mode: vertical-rl;
-      text-orientation: mixed;
-      color: #fff;
-      font-size: 13px;
-      letter-spacing: 2px;
-      transform: rotate(180deg);
-    }
+      .event-name {
+        font-size: 18px;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+      }
 
-    .visitors {
-      text-align: center;
-      color: #fff;
-      font-size: 16px;
-      margin: 10px 0 20px;
-    }
+      .event-location {
+        font-size: 14px;
+        color: #ccc;
+        letter-spacing: 0.5px;
+        margin-top: 6px;
+        margin-bottom: 6px;
+      }
 
-    .perforation_main {
-      position: relative;
-      height: 20px;
-    }
+      .event-date {
+        font-size: 14px;
+        letter-spacing: 0.2px;
+        color: #ddd;
+        margin-bottom: 8px;
+      }
 
-    .perforation {
-      height: 1px;
-      background: repeating-linear-gradient(
-        90deg,
-        #5f5f5f,
-        #5f5f5f 10px,
-        transparent 10px,
-        transparent 20px
-      );
-      margin: 10px 0;
-    }
+      .event-venue {
+        font-size: 14px;
+        color: #fff;
+        display: flex;
+        align-items: flex-start;
+        gap: 5px;
+        margin-top: 10px;
+      }
 
-    .circel_1 {
-      width: 25px;
-      height: 25px;
-      background-color: #000;
-      position: absolute;
-      top: 50%;
-      left: -12px;
-      transform: translateY(-50%);
-      border-radius: 50%;
-      border-right: 1px solid #5f5f5f;
-    }
+      .location-icon {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+      }
 
-    .circel_2 {
-      width: 25px;
-      height: 25px;
-      background-color: #000;
-      position: absolute;
-      top: 50%;
-      right: -12px;
-      transform: translateY(-50%);
-      border-radius: 50%;
-      border-left: 1px solid #5f5f5f;
-    }
+      .qr-section {
+        margin-top: 42px;
+        text-align: center;
+        position: relative;
+      }
 
-    .bottom-section {
-      padding: 20px;
-      display: flex;
-      gap: 15px;
-    }
+      .qr-code {
+        background: white;
+        padding: 15px;
+        display: inline-block;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+      }
 
-    .band-poster {
-      width: 80px;
-      height: 80px;
-      border-radius: 8px;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
+      .qr-code img {
+        width: 147px;
+        height: 147px;
+      }
 
-    .band-poster img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+      .booking-id {
+        position: absolute;
+        right: -16px;
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+        color: #fff;
+        font-size: 14px;
+        letter-spacing: 0.5px;
+        transform: rotate(180deg);
+        text-transform: uppercase;
+        top: 0;
+        height: 100%;
+      }
 
-    .band-details {
-      flex: 1;
-      color: #fff;
-    }
+      .visitors {
+        margin-top: 18px;
+        letter-spacing: 0.2px;
+        text-align: center;
+        font-weight: 500;
+        color: #fff;
+        font-size: 14px;
+      }
 
-    .band-name {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
+      .perforation_main {
+        position: relative;
+        text-align: center;
+        height: 20px;
+      }
 
-    .band-desc {
-      font-size: 13px;
-      color: #bbb;
-      line-height: 1.4;
-    }
+      .perforation {
+        height: 1px;
 
-    .hashtag {
-      text-align: right;
-      color: #666;
-      font-size: 13px;
-      margin-top: 10px;
-      padding: 0 20px 15px;
-    }
-  </style>
-</head>
-<body>
+        background: repeating-linear-gradient(
+          90deg,
+          #828282,
+          #828282 10px,
+          transparent 10px,
+          transparent 20px
+        );
 
-  <div class="ticket">
+        margin-top: 25px;
+      }
 
-    <!-- Header -->
-    <div class="header">
-      <div class="logo-placeholder">
-        <img src="${data.logo}"
-          alt="Bharat Bhakti Logo"
-          style="max-width: 100%; max-height: 70px;" />
-      </div>
-    </div>
+      .circel_1 {
+        width: 40px;
+        height: 50px;
+        background-color: #000;
+        position: absolute;
+        top: 69%;
+        left: 0px;
+        transform: translateY(-50%);
+        border-radius: 50%;
+        border-right: 1px solid #5f5f5f;
+      }
 
-    <!-- Event Info -->
-    <div class="event-info">
-      <div class="event-poster">
-        <img src="${data.poster}" alt="Event Poster" />
-      </div>
-      <div class="event-details">
-        <div class="event-name">${data.eventName}</div>
-        <div class="event-location">${data.location}</div>
-        <div class="event-date">${data.date} ${data.time}</div>
-        
-        <div class="event-venue">
-          <svg class="location-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 122.88 115.23">
-            <defs>
-              <style>
-                .cls-1 { fill: #212121; }
-                .cls-2 { fill: #f44336; }
-              </style>
-            </defs>
-            <path class="cls-1" d="M25.32,75.31a3.59,3.59,0,1,1,0,7.18H18.58L9.7,108.07H112.93l-9.64-25.58H97.72a3.59,3.59,0,0,1,0-7.18h10.7l14.46,39.92H0L13.32,75.31Z"/>
-            <path class="cls-2" d="M79.06,83.64A70.16,70.16,0,0,1,63.78,96.28a2.15,2.15,0,0,1-2.45.08,86.21,86.21,0,0,1-21.25-19C32.34,67.69,27.46,56.92,25.8,46.55s-.11-20.63,5.12-28.86a35.35,35.35,0,0,1,7.91-8.76C46.21,3.05,54.64-.06,63,0A34.1,34.1,0,0,1,86,9.38a33.87,33.87,0,0,1,6.13,7.47c5.63,9.27,6.84,21.09,4.37,33.07a72.84,72.84,0,0,1-17.46,33.7v0ZM61.44,18.7A18.06,18.06,0,1,1,43.38,36.76,18.06,18.06,0,0,1,61.44,18.7Z"/>
-          </svg>
-          ${data.venue}
+      .circel_2 {
+        width: 40px;
+        height: 50px;
+        background-color: #000;
+        position: absolute;
+        top: 69%;
+        right: 5px;
+        transform: translateY(-50%);
+        border-radius: 50%;
+        border-left: 1px solid #5f5f5f;
+      }
+
+      .bottom-section {
+        width: 100%;
+        margin-top: 30px;
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+      }
+
+      .band-poster {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 25px;
+        align-items: center;
+      }
+
+      .band-poster img {
+        width: 86px;
+        height: 75px;
+        object-fit: cover;
+        border-radius: 8px;
+      }
+
+      .band-poster-details {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .band-poster-details small {
+        font-size: 12px;
+        color: #fff;
+        margin-top: 12px;
+      }
+
+      .band-details {
+        flex: 1;
+        color: #fff;
+      }
+
+      .band-name {
+        font-size: 14px;
+        letter-spacing: 0.5px;
+        font-weight: bold;
+        margin-bottom: 8px;
+      }
+
+      .hashtag {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        color: #666;
+        font-size: 13px;
+        padding: 39px 20px 15px;
+      }
+
+      .circel_3 {
+        width: 50px;
+        height: 40px;
+        background-color: #000;
+        position: absolute;
+        top: 96%;
+        left: 43%;
+        transform: translateY(-50%);
+        border-radius: 50px 50px 0 0;
+        border-top: 1px solid #5f5f5f;
+        z-index: 100;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="ticket">
+
+        <!-- Header -->
+        <div class="header">
+          <div class="logo-placeholder">
+
+            <div class="logo-div">
+              <img
+                src="${data?.logo}"
+                alt="Bharat Bhakti Logo"
+                style="max-width: 100%; max-height: 140px"
+              />
+            </div>
+
+            <div class="hr-div">
+              <hr />
+            </div>
+
+          </div>
         </div>
+
+        <!-- Event Info -->
+        <div class="event-info">
+
+          <div class="event-poster">
+            <img
+              src="${data?.poster}"
+              alt="Event Poster"
+            />
+          </div>
+
+          <div class="event-details">
+
+            <div class="event-name">
+              ${data?.eventName}
+            </div>
+
+            <div class="event-location">
+             ${data?.location}
+            </div>
+
+            <div class="event-date">
+              Sunday, 14 June | 5PM To 10PM
+            </div>
+
+            <div class="event-venue">
+
+              <img
+                src="https://res.cloudinary.com/dqwc7j44b/image/upload/v1778828772/venue_logo_ecsn8t.svg"
+                style="width: 18px; height: 18px"
+              />
+
+              <span
+                style="
+                  font-size: 11px;
+                  font-weight: 500;
+                  letter-spacing: 0.7px;
+                  line-height: 17px;
+                "
+              >
+                Club Park E-Block, Vatika Inida Next,
+                Sec 82, Gurugram
+              </span>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- QR -->
+        <div class="qr-section">
+
+          <div class="qr-code">
+            <img
+              src="${data?.qr}"
+              alt="QR Code"
+            />
+          </div>
+
+          <div class="booking-id">
+            BOOKING ID: ${data?.u_id}
+          </div>
+
+        </div>
+
+        <div class="visitors">
+          No. of Guests - ${data?.visitors}
+        </div>
+
+        <!-- Line -->
+        <div class="perforation_main">
+          <div class="perforation"></div>
+        </div>
+
+        <!-- Artists -->
+        <div class="bottom-section">
+
+          <div class="band-poster">
+
+            <div class="band-poster-details">
+              <img
+                src="https://res.cloudinary.com/dqwc7j44b/image/upload/v1778827378/ravish_pandit_pj0vk7.png"
+                alt="Ravish Pandit"
+              />
+              <small>Ravish Pandit</small>
+            </div>
+
+            <div class="band-poster-details">
+              <img
+                src="https://res.cloudinary.com/dqwc7j44b/image/upload/v1778827379/artist_chowk_qdwn0p.png"
+                alt="Artist Chowk"
+              />
+              <small>Artist Chowk</small>
+            </div>
+
+            <div class="band-poster-details">
+              <img
+                src="https://res.cloudinary.com/dqwc7j44b/image/upload/v1778827379/bhavna_pandit_cafnqs.png"
+                alt="Bhavna Pandit"
+              />
+              <small>Bhavna Pandit</small>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="hashtag">
+          #bharatbhaktisangam
+        </div>
+
       </div>
-    </div>
 
-    <!-- QR Code Section -->
-    <div class="qr-section">
-      <div class="qr-code">
-        <img src="${data.qr}" alt="QR Code" />
-      </div>
-      <div class="booking-id">BOOKING ID: ${data.u_id}</div>
-    </div>
-
-    <div class="visitors">No. of Guests - ${data.visitors}</div>
-
-    <!-- Perforation with Circles -->
-    <div class="perforation_main">
-      <div class="perforation"></div>
       <div class="circel_1"></div>
       <div class="circel_2"></div>
+      <div class="circel_3"></div>
+
     </div>
-
-    <!-- Bottom Band Section -->
-    <div class="bottom-section">
-      <div class="band-poster">
-        <img src="${data.artistImage}" alt="North Rock Band" />
-      </div>
-      <div class="band-details">
-        <div class="band-name">${data.artistName || "North Rock Band"}</div>
-        <div class="band-desc">${data.artistDesc || "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do"}</div>
-      </div>
-    </div>
-
-    <div class="hashtag">#bharatbhaktisangam</div>
-
-  </div>
-
-</body>
+  </body>
 </html>
 `;
 };
+
+// export const generateTicketHTML = (data) => {
+//   console.log("tiket data", data);
+//   return `
+// <!doctype html>
+// <html lang="en">
+// <head>
+//   <meta charset="UTF-8" />
+//   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+//   <title>Bharat Bhakti Sangam Ticket</title>
+//   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+//   <style>
+//     * {
+//       margin: 0;
+//       padding: 0;
+//       box-sizing: border-box;
+//       font-family: "Poppins", sans-serif;
+//       font-weight: 600;
+//     }
+
+//     html{
+//     background: transparent !important;
+//     }
+
+//     body {
+//       background: transparent !important;
+//       padding: 40px 20px;
+//       display: flex;
+//       justify-content: center;
+//       align-items: center;
+//       min-height: 100vh;
+//     }
+
+//     .ticket {
+//       width: 100%;
+//       max-width: 450px;
+//       background:
+//         radial-gradient(
+//           circle at 50% 20%,
+//           rgba(255, 140, 0, 0.15),
+//           transparent 40%
+//         ),
+//         radial-gradient(
+//           circle at 80% 80%,
+//           rgba(255, 255, 255, 0.05),
+//           transparent 50%
+//         ),
+//         linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 40%, #000000 100%);
+
+//       overflow: hidden;
+//       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+//       border: 1px solid #333;
+//       position: relative;
+//     }
+
+//     .header {
+//       text-align: center;
+//       padding: 25px 20px 15px;
+//     }
+
+//     .logo-placeholder {
+//       width: 180px;
+//       height: 80px;
+//       margin: 0 auto 12px;
+//       display: flex;
+//       align-items: center;
+//       justify-content: center;
+//     }
+
+//     .event-subtitle {
+//       color: #ffcc00;
+//       font-size: 22px;
+//       font-weight: bold;
+//       margin-bottom: 5px;
+//     }
+
+//     .event-title {
+//       color: #ff6600;
+//       font-size: 18px;
+//       font-weight: bold;
+//       text-transform: uppercase;
+//       letter-spacing: 2px;
+//     }
+
+//     .event-info {
+//       padding: 20px;
+//       display: flex;
+//       gap: 15px;
+//     }
+
+//     .event-poster {
+//       width: 90px;
+//       height: 110px;
+//       border-radius: 8px;
+//       overflow: hidden;
+//       flex-shrink: 0;
+//     }
+
+//     .event-poster img {
+//       width: 100%;
+//       height: 100%;
+//       object-fit: cover;
+//     }
+
+//     .event-details {
+//       flex: 1;
+//       color: #fff;
+//     }
+
+//     .event-name {
+//       font-size: 20px;
+//       font-weight: bold;
+//       margin-bottom: 8px;
+//     }
+
+//     .event-location {
+//       font-size: 15px;
+//       color: #ccc;
+//       margin-bottom: 8px;
+//     }
+
+//     .event-date {
+//       font-size: 15px;
+//       color: #ddd;
+//       margin-bottom: 8px;
+//     }
+
+//     .event-venue {
+//       font-size: 14px;
+//       color: #fff;
+//       display: flex;
+//       align-items: center;
+//       gap: 6px;
+//     }
+
+//     .location-icon {
+//       width: 18px;
+//       height: 18px;
+//       flex-shrink: 0;
+//     }
+
+//     .qr-section {
+//       padding: 25px 20px;
+//       text-align: center;
+//     }
+
+//     .qr-code {
+//       background: white;
+//       padding: 15px;
+//       display: inline-block;
+//       border-radius: 12px;
+//       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+//     }
+
+//     .qr-code img {
+//       width: 220px;
+//       height: 220px;
+//     }
+
+//     .booking-id {
+//       position: absolute;
+//       right: 20px;
+//       top: 285px;
+//       writing-mode: vertical-rl;
+//       text-orientation: mixed;
+//       color: #fff;
+//       font-size: 13px;
+//       letter-spacing: 2px;
+//       transform: rotate(180deg);
+//     }
+
+//     .visitors {
+//       text-align: center;
+//       color: #fff;
+//       font-size: 16px;
+//       margin: 10px 0 20px;
+//     }
+
+//     .perforation_main {
+//       position: relative;
+//       height: 20px;
+//     }
+
+//     .perforation {
+//       height: 1px;
+//       background: repeating-linear-gradient(
+//         90deg,
+//         #5f5f5f,
+//         #5f5f5f 10px,
+//         transparent 10px,
+//         transparent 20px
+//       );
+//       margin: 10px 0;
+//     }
+
+//     .circel_1 {
+//       width: 25px;
+//       height: 25px;
+//       background-color: #000;
+//       position: absolute;
+//       top: 50%;
+//       left: -12px;
+//       transform: translateY(-50%);
+//       border-radius: 50%;
+//       border-right: 1px solid #5f5f5f;
+//     }
+
+//     .circel_2 {
+//       width: 25px;
+//       height: 25px;
+//       background-color: #000;
+//       position: absolute;
+//       top: 50%;
+//       right: -12px;
+//       transform: translateY(-50%);
+//       border-radius: 50%;
+//       border-left: 1px solid #5f5f5f;
+//     }
+
+//     .bottom-section {
+//       padding: 20px;
+//       display: flex;
+//       gap: 15px;
+//     }
+
+//     .band-poster {
+//       width: 80px;
+//       height: 80px;
+//       border-radius: 8px;
+//       overflow: hidden;
+//       flex-shrink: 0;
+//     }
+
+//     .band-poster img {
+//       width: 100%;
+//       height: 100%;
+//       object-fit: cover;
+//     }
+
+//     .band-details {
+//       flex: 1;
+//       color: #fff;
+//     }
+
+//     .band-name {
+//       font-size: 18px;
+//       font-weight: bold;
+//       margin-bottom: 8px;
+//     }
+
+//     .band-desc {
+//       font-size: 13px;
+//       color: #bbb;
+//       line-height: 1.4;
+//     }
+
+//     .hashtag {
+//       text-align: right;
+//       color: #666;
+//       font-size: 13px;
+//       margin-top: 10px;
+//       padding: 0 20px 15px;
+//     }
+//   </style>
+// </head>
+// <body>
+
+//   <div class="ticket">
+
+//     <!-- Header -->
+//     <div class="header">
+//       <div class="logo-placeholder">
+//         <img src="${data.logo}"
+//           alt="Bharat Bhakti Logo"
+//           style="max-width: 100%; max-height: 70px;" />
+//       </div>
+//     </div>
+
+//     <!-- Event Info -->
+//     <div class="event-info">
+//       <div class="event-poster">
+//         <img src="${data.poster}" alt="Event Poster" />
+//       </div>
+//       <div class="event-details">
+//         <div class="event-name">${data.eventName}</div>
+//         <div class="event-location">${data.location}</div>
+//         <div class="event-date">${data.date} ${data.time}</div>
+
+//         <div class="event-venue">
+//           <svg class="location-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 122.88 115.23">
+//             <defs>
+//               <style>
+//                 .cls-1 { fill: #212121; }
+//                 .cls-2 { fill: #f44336; }
+//               </style>
+//             </defs>
+//             <path class="cls-1" d="M25.32,75.31a3.59,3.59,0,1,1,0,7.18H18.58L9.7,108.07H112.93l-9.64-25.58H97.72a3.59,3.59,0,0,1,0-7.18h10.7l14.46,39.92H0L13.32,75.31Z"/>
+//             <path class="cls-2" d="M79.06,83.64A70.16,70.16,0,0,1,63.78,96.28a2.15,2.15,0,0,1-2.45.08,86.21,86.21,0,0,1-21.25-19C32.34,67.69,27.46,56.92,25.8,46.55s-.11-20.63,5.12-28.86a35.35,35.35,0,0,1,7.91-8.76C46.21,3.05,54.64-.06,63,0A34.1,34.1,0,0,1,86,9.38a33.87,33.87,0,0,1,6.13,7.47c5.63,9.27,6.84,21.09,4.37,33.07a72.84,72.84,0,0,1-17.46,33.7v0ZM61.44,18.7A18.06,18.06,0,1,1,43.38,36.76,18.06,18.06,0,0,1,61.44,18.7Z"/>
+//           </svg>
+//           ${data.venue}
+//         </div>
+//       </div>
+//     </div>
+
+//     <!-- QR Code Section -->
+//     <div class="qr-section">
+//       <div class="qr-code">
+//         <img src="${data.qr}" alt="QR Code" />
+//       </div>
+//       <div class="booking-id">BOOKING ID: ${data.u_id}</div>
+//     </div>
+
+//     <div class="visitors">No. of Guests - ${data.visitors}</div>
+
+//     <!-- Perforation with Circles -->
+//     <div class="perforation_main">
+//       <div class="perforation"></div>
+//       <div class="circel_1"></div>
+//       <div class="circel_2"></div>
+//     </div>
+
+//     <!-- Bottom Band Section -->
+//     <div class="bottom-section">
+//       <div class="band-poster">
+//         <img src="${data.artistImage}" alt="North Rock Band" />
+//       </div>
+//       <div class="band-details">
+//         <div class="band-name">${data.artistName || "North Rock Band"}</div>
+//         <div class="band-desc">${data.artistDesc || "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do"}</div>
+//       </div>
+//     </div>
+
+//     <div class="hashtag">#bharatbhaktisangam</div>
+
+//   </div>
+
+// </body>
+// </html>
+// `;
+// };
