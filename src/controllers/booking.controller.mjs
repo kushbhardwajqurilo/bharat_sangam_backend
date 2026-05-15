@@ -314,6 +314,7 @@ export const getAllBookings = catchAsync(async (req, res, next) => {
         eventName: { $ifNull: ["$event.eventName", "N/A"] },
         ticketId: "$u_id",
         contact: "$phone",
+        bookingDate: `$createdAt`,
       },
     },
   );
