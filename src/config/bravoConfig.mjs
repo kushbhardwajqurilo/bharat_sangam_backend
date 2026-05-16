@@ -99,10 +99,14 @@ export const volunteerEmailSend = catchAsync(
   },
 );
 
-export const personalMailMessage = async (subject, body, email, attachment) => {
-  // console.log({ subject, body, email, attachment });
+export const personalMailMessage = async (
+  subject,
+  body,
+  email,
+  attachments = [],
+) => {
   try {
-    const res = await tranEmailApi.sendTransacEmail({
+    const payload = {
       sender: {
         email: process.env.INFO_EMAIL,
         name: "Bharat Bhakti Sangam",
@@ -110,20 +114,24 @@ export const personalMailMessage = async (subject, body, email, attachment) => {
       to: [{ email }],
       templateId: 7,
       params: {
-        subject: subject,
-        body: body,
+        subject,
+        body,
       },
-      attachment: [
-        {
-          content: attachment?.base64Content,
-          name: attachment?.name,
-        },
-      ],
-    });
-    if (res.messageId.trim() === "") {
-      return false;
-    } else return true;
+    };
+
+    //  Multiple attachments
+    if (attachments.length > 0) {
+      payload.attachment = attachments.map((file) => ({
+        content: file.base64Content,
+        name: file.name,
+      }));
+    }
+
+    const res = await tranEmailApi.sendTransacEmail(payload);
+
+    return !!res.messageId?.trim();
   } catch (error) {
     console.error("❌ Email error:", error.response?.body || error);
+    return false;
   }
 };

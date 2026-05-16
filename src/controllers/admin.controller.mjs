@@ -1215,7 +1215,7 @@ export const statusUpdateCategoryController = catchAsync(
 
 //  mail send
 export const mailSent = catchAsync(async (req, res, next) => {
-  console.log("body data", req?.body);
+  // console.log("body data", req?.body);
   const requiredField = ["subject", "message", "recipients"];
   const missingField = requiredField.find(
     (field) => !req.body[field] || req.body[field].toString().trim() === "",
@@ -1229,17 +1229,18 @@ export const mailSent = catchAsync(async (req, res, next) => {
     }
   };
   // attachment
-  const attachment = {
-    name: "",
-    base64Content: "",
-  };
+  const attachment = [];
   let recipient;
   if (typeof req?.body?.recipients === "string") {
     recipient = safeParse(req?.body?.recipients);
   }
-  if (req?.file) {
-    attachment["name"] = req?.file?.originalname;
-    attachment["base64Content"] = req.file.buffer.toString("base64");
+  if (req?.files) {
+    req?.files.map((file) =>
+      attachment.push({
+        name: file.originalname,
+        base64Content: file.buffer.toString("base64"),
+      }),
+    );
   }
   const result = await personalMailMessage(
     // req?.body?.receiver_name,

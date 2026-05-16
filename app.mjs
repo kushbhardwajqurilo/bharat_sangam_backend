@@ -32,8 +32,8 @@ app.disable("x-powered-by");
 /* ================= MIDDLEWARE ================= */
 
 // Body limit (DoS protection)
-app.use(express.json({ limit: "20kb" }));
-app.use(express.urlencoded({ extended: true, limit: "20kb" }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 // Security headers
 app.use(helmet());

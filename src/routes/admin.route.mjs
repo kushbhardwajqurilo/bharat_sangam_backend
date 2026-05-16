@@ -171,5 +171,5 @@ adminRouter.delete(
 //   addVenueController,
 // );'
 
-adminRouter.post("/email", upload.single("attachments"), mailSent);
+adminRouter.post("/email", upload.array("attachments", 5), mailSent);
 export default adminRouter;
