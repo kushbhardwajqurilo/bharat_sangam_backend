@@ -17,6 +17,7 @@ import contactRouter from "./src/routes/contact.route.mjs";
 import subscriberRouter from "./src/routes/subscriber.route.mjs";
 import sponsorRouter from "./src/routes/sponsor.route.mjs";
 import calendarRouter from "./src/routes/calendar.route.mjs";
+import { personalMailMessage } from "./src/config/bravoConfig.mjs";
 
 const app = express();
 
@@ -139,7 +140,7 @@ app.get("/test", (req, res) => {
 app.get("/ticket", (req, res) => {
   res.sendFile(path.join(__dirname, "src/templates", "ticketTemplate.html"));
 });
-
+// app.post("/mail-send",);
 // Main APIs
 app.use(`${base}/admin`, adminRouter);
 app.use(`${base}/booking`, BookingRouter);

@@ -83,11 +83,11 @@ export const volunteerEmailSend = catchAsync(
   async (username, email, password) => {
     const res = await volunteerEmailApi.sendTransacEmail({
       sender: {
-        email: "kushqurilo@gmail.com",
+        email: process.env.INFO_EMAIL,
         name: "Bharat Bhakti Sangam",
       },
       to: [{ email }],
-      templateId: 3,
+      templateId: 4,
       params: {
         username,
         email,
@@ -98,3 +98,32 @@ export const volunteerEmailSend = catchAsync(
     return res;
   },
 );
+
+export const personalMailMessage = async (subject, body, email, attachment) => {
+  // console.log({ subject, body, email, attachment });
+  try {
+    const res = await tranEmailApi.sendTransacEmail({
+      sender: {
+        email: process.env.INFO_EMAIL,
+        name: "Bharat Bhakti Sangam",
+      },
+      to: [{ email }],
+      templateId: 7,
+      params: {
+        subject: subject,
+        body: body,
+      },
+      attachment: [
+        {
+          content: attachment?.base64Content,
+          name: attachment?.name,
+        },
+      ],
+    });
+    if (res.messageId.trim() === "") {
+      return false;
+    } else return true;
+  } catch (error) {
+    console.error("❌ Email error:", error.response?.body || error);
+  }
+};

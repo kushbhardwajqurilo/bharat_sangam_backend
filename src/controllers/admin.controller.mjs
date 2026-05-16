@@ -10,7 +10,10 @@ import mongoose, { mongo } from "mongoose";
 import venueModel from "../models/venueModel.js";
 import categoryModel from "../models/categoryModel.js";
 import { pipeline } from "stream";
-import { volunteerEmailSend } from "../config/bravoConfig.mjs";
+import {
+  personalMailMessage,
+  volunteerEmailSend,
+} from "../config/bravoConfig.mjs";
 
 // ================= TOKEN FUNCTIONS =================
 
@@ -1209,3 +1212,45 @@ export const statusUpdateCategoryController = catchAsync(
   },
 );
 // < ------------- Category End --------------->
+
+//  mail send
+export const mailSent = catchAsync(async (req, res, next) => {
+  console.log("body data", req?.body);
+  const requiredField = ["subject", "message", "recipients"];
+  const missingField = requiredField.find(
+    (field) => !req.body[field] || req.body[field].toString().trim() === "",
+  );
+  const safeParse = (val, fallback) => {
+    if (!val) return fallback;
+    try {
+      return JSON.parse(val);
+    } catch (e) {
+      return fallback;
+    }
+  };
+  // attachment
+  const attachment = {
+    name: "",
+    base64Content: "",
+  };
+  let recipient;
+  if (typeof req?.body?.recipients === "string") {
+    recipient = safeParse(req?.body?.recipients);
+  }
+  if (req?.file) {
+    attachment["name"] = req?.file?.originalname;
+    attachment["base64Content"] = req.file.buffer.toString("base64");
+  }
+  const result = await personalMailMessage(
+    // req?.body?.receiver_name,
+    req?.body?.subject,
+    req?.body?.message,
+    recipient[0],
+    attachment,
+  );
+  // console.log("mail result", result);
+  if (!result) {
+    return next(new AppError("Unable to send mail", 400));
+  }
+  return sendSuccess(res, "success", {}, 200, true);
+});

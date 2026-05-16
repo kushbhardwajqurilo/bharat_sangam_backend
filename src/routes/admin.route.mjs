@@ -1,4 +1,5 @@
 import express from "express";
+import multer from "multer";
 import {
   addBookingType,
   addCategoryController,
@@ -16,6 +17,7 @@ import {
   getSingleCategoryController,
   getSingleVolunteer,
   loginVolunteer,
+  mailSent,
   statusUpdateCategoryController,
   updateBookingType,
   updateCategoryController,
@@ -32,6 +34,11 @@ import {
   AuthMiddleware,
 } from "../middlewares/authMiddleware.mjs";
 
+const storage = multer.memoryStorage();
+
+export const upload = multer({
+  storage,
+});
 const adminRouter = express.Router();
 adminRouter.post("/register", adminRegister);
 adminRouter.post("/login", adminLogin);
@@ -162,5 +169,7 @@ adminRouter.delete(
 //   AuthMiddleware,
 //   accessMiddleware("admin"),
 //   addVenueController,
-// );
+// );'
+
+adminRouter.post("/email", upload.single("attachments"), mailSent);
 export default adminRouter;

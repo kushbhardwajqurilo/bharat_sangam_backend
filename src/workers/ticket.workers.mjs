@@ -231,7 +231,7 @@ import mongoose from "mongoose";
 import QRCode from "qrcode";
 import puppeteer from "puppeteer";
 import { generateTicketHTML } from "../utils/ticketTemplate.mjs";
-import { redisConnection } from "../config/redis.mjs";
+import redisConnection from "../config/redis.mjs";
 import bookingModel from "../models/bookingModel.js";
 import { Worker } from "bullmq";
 import { sendTicketEmailFromBravo } from "../config/bravoConfig.mjs";
