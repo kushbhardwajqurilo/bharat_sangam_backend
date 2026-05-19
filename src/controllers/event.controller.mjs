@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { AppError, catchAsync, sendSuccess } from "../utils/handler.mjs";
 import eventModel from "../models/eventModel.js";
+import bookingModel from "../models/bookingModel.js";
 
 // ================= CREATE EVENT =================
 export const createEvent = catchAsync(async (req, res, next) => {
@@ -80,7 +81,7 @@ export const createEvent = catchAsync(async (req, res, next) => {
 //   const events = await eventModel.aggregate([
 //     { $sort: { createdAt: -1 } },
 
-//     // 🔹 Venue populate
+//     //  Venue populate
 //     {
 //       $lookup: {
 //         from: "venues",
@@ -91,7 +92,7 @@ export const createEvent = catchAsync(async (req, res, next) => {
 //     },
 //     { $unwind: "$venueName" },
 
-//     // 🔹 Artists populate
+//     //  Artists populate
 //     {
 //       $lookup: {
 //         from: "artists",
@@ -101,7 +102,7 @@ export const createEvent = catchAsync(async (req, res, next) => {
 //       },
 //     },
 
-//     // 🔹 BookingType populate
+//     //  BookingType populate
 //     {
 //       $lookup: {
 //         from: "bokkingtypes", //  collection name check kar lena
@@ -188,7 +189,7 @@ export const getAllEvents = catchAsync(async (req, res, next) => {
   const events = await eventModel.aggregate([
     { $sort: { createdAt: -1 } },
 
-    // 🔹 Venue
+    //  Venue
     {
       $lookup: {
         from: "venues",
@@ -199,7 +200,7 @@ export const getAllEvents = catchAsync(async (req, res, next) => {
     },
     { $unwind: "$venueName" },
 
-    // 🔹 Artists
+    //  Artists
     {
       $lookup: {
         from: "artists",
@@ -218,7 +219,7 @@ export const getAllEvents = catchAsync(async (req, res, next) => {
       },
     },
 
-    // 🔹 BookingType
+    //  BookingType
     {
       $lookup: {
         from: "bokkingtypes",
@@ -255,7 +256,7 @@ export const getAllEvents = catchAsync(async (req, res, next) => {
       },
     },
 
-    // 🔹 Final Output
+    //  Final Output
     {
       $project: {
         _id: 1,
@@ -349,7 +350,7 @@ export const getSingleEvent = catchAsync(async (req, res, next) => {
   const events = await eventModel.aggregate([
     { $match: { _id: new mongoose.Types.ObjectId(id) } },
 
-    // 🔹 Venue
+    //  Venue
     {
       $lookup: {
         from: "venues",
@@ -360,7 +361,7 @@ export const getSingleEvent = catchAsync(async (req, res, next) => {
     },
     { $unwind: "$venueName" },
 
-    // 🔹 Artists
+    //  Artists
     {
       $lookup: {
         from: "artists",
@@ -379,7 +380,7 @@ export const getSingleEvent = catchAsync(async (req, res, next) => {
       },
     },
 
-    // 🔹 BookingType
+    //  BookingType
     {
       $lookup: {
         from: "bokkingtypes",
@@ -415,7 +416,7 @@ export const getSingleEvent = catchAsync(async (req, res, next) => {
       },
     },
 
-    // 🔹 Final Output
+    //  Final Output
     {
       $project: {
         _id: 1,
@@ -612,7 +613,7 @@ export const getLatestEvent = catchAsync(async (req, res, next) => {
     { $sort: { createdAt: -1 } },
     { $limit: 1 },
 
-    // 🔹 Venue populate
+    //  Venue populate
     {
       $lookup: {
         from: "venues",
@@ -623,7 +624,7 @@ export const getLatestEvent = catchAsync(async (req, res, next) => {
     },
     { $unwind: "$venueName" },
 
-    // 🔹 Artists populate
+    //  Artists populate
     {
       $lookup: {
         from: "artists",
@@ -633,7 +634,7 @@ export const getLatestEvent = catchAsync(async (req, res, next) => {
       },
     },
 
-    // 🔹 BookingType populate
+    //  BookingType populate
     {
       $lookup: {
         from: "bokkingtypes", //  collection name check kar lena
@@ -720,4 +721,468 @@ export const latestEventCapacity = catchAsync(async (req, res, next) => {
     isSoldOut: event?.maxSeats === event?.bookedSeats,
   };
   return sendSuccess(res, "success", payload, 200, true);
+});
+
+// <------- add Manual Attended ------>
+
+export const addManualAttended = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const { manualAttendance } = req.body;
+  if (!id) {
+    return next(new AppError("Event Id Missing", 400));
+  }
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return next(new AppError("Invalid Event Id", 400));
+  }
+  if (!manualAttendance) {
+    return next(new AppError("Attentance Missing", 400));
+  }
+  const result = await eventModel.updateOne(
+    { _id: id },
+    { $set: { manualAttendance: manualAttendance } },
+  );
+  if (result.matchedCount === 0) {
+    return next(new AppError("Unable to add attendace", 400));
+  }
+  return sendSuccess(res, "Success", {}, 201, true);
+});
+
+// <------- add Manual Attended end ------>
+
+// < ------ Admin Dashboard Event Analytics Start Here -------- >
+
+export const dahsboardCardAnalytics = catchAsync(async (req, res, next) => {
+  let analytics = await eventModel.aggregate([
+    // 🔹 Latest Events
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+
+    {
+      $limit: 3,
+    },
+
+    // 🔹 Venue Lookup
+    {
+      $lookup: {
+        from: "venues",
+        localField: "venueName",
+        foreignField: "_id",
+        as: "venueName",
+      },
+    },
+
+    {
+      $unwind: "$venueName",
+    },
+
+    // 🔹 Booking Lookup
+    {
+      $lookup: {
+        from: "bookings",
+        localField: "_id",
+        foreignField: "eventId",
+        as: "bookings",
+      },
+    },
+
+    // 🔹 Total Registrations
+    {
+      $addFields: {
+        totalRegistration: {
+          $size: "$bookings",
+        },
+      },
+    },
+
+    // 🔹 Barcode Entries Count + Used Tickets Sum
+    {
+      $addFields: {
+        // ✅ Count of bookings where isUsed = true
+        barcodeEntries: {
+          $size: {
+            $filter: {
+              input: "$bookings",
+              as: "booking",
+              cond: {
+                $eq: ["$$booking.isUsed", true],
+              },
+            },
+          },
+        },
+
+        // ✅ Sum of totalTicket where isUsed = true
+        usedTickets: {
+          $sum: {
+            $map: {
+              input: {
+                $filter: {
+                  input: "$bookings",
+                  as: "booking",
+                  cond: {
+                    $eq: ["$$booking.isUsed", true],
+                  },
+                },
+              },
+
+              as: "booking",
+
+              in: {
+                $ifNull: ["$$booking.totalTicket", 0],
+              },
+            },
+          },
+        },
+      },
+    },
+
+    // 🔹 Attended Tickets
+    {
+      $addFields: {
+        attended: {
+          $add: [
+            // ✅ Used Ticket Count
+            "$usedTickets",
+
+            // ✅ Manual Attendance
+            {
+              $ifNull: ["$manualAttendance", 0],
+            },
+          ],
+        },
+      },
+    },
+
+    // 🔹 Final Output
+    {
+      $project: {
+        id: "$_id",
+
+        title: "$eventName",
+
+        date: 1,
+
+        bookedSeats: 1,
+
+        attended: 1,
+
+        barcodeEntries: 1,
+
+        usedTickets: 1,
+
+        totalRegistration: 1,
+
+        venueName: {
+          $concat: ["$venueName.venue", ", ", "$venueName.address"],
+        },
+      },
+    },
+  ]);
+
+  // 🔹 Attendance Delta + Status
+  analytics = analytics.map((event, index) => {
+    const previousEvent = analytics[index + 1];
+
+    let attendanceRateDelta = 0;
+
+    if (previousEvent && previousEvent.attended > 0) {
+      attendanceRateDelta =
+        ((event.attended - previousEvent.attended) / previousEvent.attended) *
+        100;
+    }
+
+    // 🔹 Event Status
+    let status = "unknown";
+
+    if (index === 0) {
+      status = "current";
+    } else if (index === 1) {
+      status = "last";
+    } else if (index >= 2) {
+      status = "earlier";
+    }
+
+    return {
+      id: event.id,
+
+      title: event.title,
+
+      date: event.date,
+
+      venue: event.venueName,
+
+      status,
+
+      stats: {
+        totalBookings: event.bookedSeats,
+
+        attended: event.attended,
+
+        attendanceRateDelta: Number(attendanceRateDelta.toFixed(2)),
+
+        totalRegistrations: event.totalRegistration,
+
+        // ✅ Count of used bookings
+        barcodeEntries: event.usedTickets,
+
+        // ✅ Sum of used booking tickets
+      },
+    };
+  });
+
+  // 🔹 Add Dummy Data If Only One Event Exists
+  if (analytics.length === 1) {
+    analytics.push(
+      {
+        id: "69e72496d6dbf594ad9cdbad",
+
+        title: "Bharat Bhakti Sangam 2026 2.0",
+
+        date: "",
+
+        venue: "",
+
+        status: "last",
+
+        stats: {
+          totalBookings: 0,
+          attended: 0,
+          attendanceRateDelta: 0,
+          totalRegistrations: 0,
+          barcodeEntries: 0,
+        },
+      },
+
+      {
+        id: "69e72496d6dbf594ad9cdbaf",
+
+        title: "Bharat Bhakti Sangam 2026 3.0",
+
+        date: "",
+
+        venue: "",
+
+        status: "earlier",
+
+        stats: {
+          totalBookings: 0,
+          attended: 0,
+          attendanceRateDelta: 0,
+          totalRegistrations: 0,
+        },
+      },
+    );
+  }
+
+  return res.status(200).json({
+    success: true,
+    analytics,
+  });
+});
+
+// dashboard chart
+// export const dashboardLineChartAnalytics = catchAsync(
+//   async (req, res, next) => {
+//     const data = await bookingModel.aggregate([
+//       //  Group By Real Date
+//       {
+//         $group: {
+//           _id: {
+//             year: { $year: "$createdAt" },
+//             month: { $month: "$createdAt" },
+//             day: { $dayOfMonth: "$createdAt" },
+//           },
+
+//           totalTickets: {
+//             $sum: "$totalTicket",
+//           },
+
+//           totalBookings: {
+//             $sum: 1,
+//           },
+//         },
+//       },
+
+//       //  Proper Date Sorting
+//       {
+//         $sort: {
+//           "_id.year": 1,
+//           "_id.month": 1,
+//           "_id.day": 1,
+//         },
+//       },
+
+//       //  Final Response
+//       {
+//         $project: {
+//           _id: 0,
+
+//           date: {
+//             $concat: [
+//               { $toString: "$_id.day" },
+//               "-",
+//               { $toString: "$_id.month" },
+//               "-",
+//               { $toString: "$_id.year" },
+//             ],
+//           },
+//           totalTickets: 1,
+//         },
+//       },
+//     ]);
+
+//     return res.status(200).json({
+//       success: true,
+//       data,
+//     });
+//   },
+// );
+export const dashboardLineChartAnalytics = catchAsync(
+  async (req, res, next) => {
+    const data = await bookingModel.aggregate([
+      // 🔹 Group By Real Date
+      {
+        $group: {
+          _id: {
+            year: {
+              $year: {
+                date: "$createdAt",
+                timezone: "Asia/Kolkata",
+              },
+            },
+
+            month: {
+              $month: {
+                date: "$createdAt",
+                timezone: "Asia/Kolkata",
+              },
+            },
+
+            day: {
+              $dayOfMonth: {
+                date: "$createdAt",
+                timezone: "Asia/Kolkata",
+              },
+            },
+          },
+
+          totalTickets: {
+            $sum: "$totalTicket",
+          },
+
+          totalBookings: {
+            $sum: 1,
+          },
+        },
+      },
+
+      // 🔹 Proper Date Sorting
+      {
+        $sort: {
+          "_id.year": 1,
+          "_id.month": 1,
+          "_id.day": 1,
+        },
+      },
+
+      // 🔹 Final Response
+      {
+        $project: {
+          _id: 0,
+
+          date: {
+            $concat: [
+              { $toString: "$_id.day" },
+              "-",
+              { $toString: "$_id.month" },
+              "-",
+              { $toString: "$_id.year" },
+            ],
+          },
+
+          totalTickets: 1,
+
+          totalBookings: 1,
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data,
+    });
+  },
+);
+export const dashboardBarChartAnalytics = catchAsync(async (req, res, next) => {
+  const { date } = req.query;
+  const startDate = new Date(date);
+  startDate.setHours(0, 0, 0, 0);
+
+  const endDate = new Date(date);
+  endDate.setHours(23, 59, 59, 999);
+
+  const data = await bookingModel.aggregate([
+    // 🔹 Filter By Date
+    {
+      $match: {
+        createdAt: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      },
+    },
+
+    // 🔹 Event Lookup
+    {
+      $lookup: {
+        from: "events",
+        localField: "eventId",
+        foreignField: "_id",
+        as: "event",
+      },
+    },
+
+    // 🔹 Convert Array To Object
+    {
+      $unwind: "$event",
+    },
+
+    // 🔹 Group By Event
+    {
+      $group: {
+        _id: "$event._id",
+
+        eventName: {
+          $first: "$event.eventName",
+        },
+
+        totalTickets: {
+          $sum: "$totalTicket",
+        },
+
+        totalBookings: {
+          $sum: 1,
+        },
+      },
+    },
+
+    // 🔹 Final Response
+    {
+      $project: {
+        _id: 0,
+
+        eventId: "$_id",
+        eventName: 1,
+        totalBooking: "$totalTickets",
+        totalRegistrations: "$totalBookings",
+      },
+    },
+  ]);
+
+  return res.status(200).json({
+    success: true,
+    data,
+  });
 });

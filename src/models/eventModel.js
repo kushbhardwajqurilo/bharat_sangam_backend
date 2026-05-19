@@ -104,6 +104,7 @@ const eventSchema = new mongoose.Schema(
       default:
         "https://res.cloudinary.com/dqwc7j44b/image/upload/v1776320688/bharat_bhakti_sangam_banner_for_website.png0_tfl5fb.png",
     },
+    manualAttendance: { type: Number, default: 0 },
   },
   {
     timestamps: true,

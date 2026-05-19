@@ -1,7 +1,11 @@
 import Redis from "ioredis";
 import dotenv from "dotenv";
 dotenv.config();
-const redisConnection = new Redis(process.env.REDIS_URL, {
+const REDIS_URL =
+  process.env.NODE_ENV === "production"
+    ? process.env.REDIS_URL
+    : process.env.DEV_REDIS_URL;
+const redisConnection = new Redis(REDIS_URL, {
   maxRetriesPerRequest: null,
 
   retryStrategy(times) {

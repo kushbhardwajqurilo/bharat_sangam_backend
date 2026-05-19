@@ -33,6 +33,11 @@ import {
   accessMiddleware,
   AuthMiddleware,
 } from "../middlewares/authMiddleware.mjs";
+import {
+  dahsboardCardAnalytics,
+  dashboardBarChartAnalytics,
+  dashboardLineChartAnalytics,
+} from "../controllers/event.controller.mjs";
 
 const storage = multer.memoryStorage();
 
@@ -150,26 +155,28 @@ adminRouter.delete(
   accessMiddleware("admin"),
   statusUpdateCategoryController,
 );
-
-// venue router
-// adminRouter.post(
-//   "/add-venue",
-//   AuthMiddleware,
-//   accessMiddleware("admin"),
-//   addVenueController,
-// );
-// adminRouter.get(
-//   "/all",
-//   AuthMiddleware,
-//   accessMiddleware("admin"),
-//   getAllVanueList,
-// );
-// adminRouter.post(
-//   "/add-venue",
-//   AuthMiddleware,
-//   accessMiddleware("admin"),
-//   addVenueController,
-// );'
-
 adminRouter.post("/email", upload.array("attachments", 5), mailSent);
+
+// <------- dashboard analytics route   ---------->
+
+adminRouter.get(
+  "/dashboard/analytics",
+  // AuthMiddleware,
+  // accessMiddleware("admin"),
+  dahsboardCardAnalytics,
+);
+
+adminRouter.get(
+  "/dashboard/booking-trend",
+  AuthMiddleware,
+  accessMiddleware("admin"),
+  dashboardLineChartAnalytics,
+);
+adminRouter.get(
+  "/dashboard/booking-registration-trend",
+  AuthMiddleware,
+  accessMiddleware("admin"),
+  dashboardBarChartAnalytics,
+);
+// <------- dashboard analytics route end  ---------->
 export default adminRouter;
