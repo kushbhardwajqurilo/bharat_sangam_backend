@@ -174,8 +174,8 @@ adminRouter.get(
 );
 adminRouter.get(
   "/dashboard/booking-registration-trend",
-  // AuthMiddleware,
-  // accessMiddleware("admin"),
+  AuthMiddleware,
+  accessMiddleware("admin"),
   dashboardBarChartAnalytics,
 );
 // <------- dashboard analytics route end  ---------->
