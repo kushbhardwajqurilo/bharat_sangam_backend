@@ -1115,16 +1115,87 @@ export const dashboardLineChartAnalytics = catchAsync(
     });
   },
 );
+// export const dashboardBarChartAnalytics = catchAsync(async (req, res, next) => {
+//   const { date } = req.query;
+//   const startDate = new Date(date);
+//   startDate.setHours(0, 0, 0, 0);
+
+//   const endDate = new Date(date);
+//   endDate.setHours(23, 59, 59, 999);
+
+//   const data = await bookingModel.aggregate([
+//     // 🔹 Filter By Date
+//     {
+//       $match: {
+//         createdAt: {
+//           $gte: startDate,
+//           $lte: endDate,
+//         },
+//       },
+//     },
+
+//     // 🔹 Event Lookup
+//     {
+//       $lookup: {
+//         from: "events",
+//         localField: "eventId",
+//         foreignField: "_id",
+//         as: "event",
+//       },
+//     },
+
+//     // 🔹 Convert Array To Object
+//     {
+//       $unwind: "$event",
+//     },
+
+//     // 🔹 Group By Event
+//     {
+//       $group: {
+//         _id: "$event._id",
+
+//         eventName: {
+//           $first: "$event.eventName",
+//         },
+
+//         totalTickets: {
+//           $sum: "$totalTicket",
+//         },
+
+//         totalBookings: {
+//           $sum: 1,
+//         },
+//       },
+//     },
+
+//     // 🔹 Final Response
+//     {
+//       $project: {
+//         _id: 0,
+
+//         eventId: "$_id",
+//         eventName: 1,
+//         totalBooking: "$totalTickets",
+//         totalRegistrations: "$totalBookings",
+//       },
+//     },
+//   ]);
+
+//   return res.status(200).json({
+//     success: true,
+//     data,
+//   });
+// });
+
 export const dashboardBarChartAnalytics = catchAsync(async (req, res, next) => {
   const { date } = req.query;
-  const startDate = new Date(date);
-  startDate.setHours(0, 0, 0, 0);
 
-  const endDate = new Date(date);
-  endDate.setHours(23, 59, 59, 999);
+  // ✅ Asia/Kolkata Timezone Date Range
+  const startDate = new Date(`${date}T00:00:00.000+05:30`);
+  const endDate = new Date(`${date}T23:59:59.999+05:30`);
 
   const data = await bookingModel.aggregate([
-    // 🔹 Filter By Date
+    // 🔹 Filter By IST Date
     {
       $match: {
         createdAt: {
@@ -1174,8 +1245,11 @@ export const dashboardBarChartAnalytics = catchAsync(async (req, res, next) => {
         _id: 0,
 
         eventId: "$_id",
+
         eventName: 1,
+
         totalBooking: "$totalTickets",
+
         totalRegistrations: "$totalBookings",
       },
     },
