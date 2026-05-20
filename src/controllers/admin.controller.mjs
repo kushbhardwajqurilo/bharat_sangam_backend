@@ -25,7 +25,7 @@ const generateAccessToken = (data) => {
       role: data.role,
     },
     process.env.ACCESS_SECRET,
-    { expiresIn: "30m" },
+    { expiresIn: "24h" },
   );
 };
 
