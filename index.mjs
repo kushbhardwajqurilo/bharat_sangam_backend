@@ -20,7 +20,6 @@
 // };
 
 // startServer();
-
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -35,7 +34,7 @@ let server;
 const startServer = async () => {
   try {
     await connectDB(); // ✅ connect DB first
-
+    console.log(process.env.NODE_ENV);
     server = app.listen(PORT, "0.0.0.0", () => {
       console.log(`🚀 Server Running at http://localhost:${PORT}`);
     });

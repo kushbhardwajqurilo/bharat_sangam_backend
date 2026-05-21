@@ -9,6 +9,7 @@ import {
   adminRegister,
   deleteBookingType,
   disableVolunteer,
+  forgetPassword,
   getAllBookingTypes,
   getAllCategoryController,
   getAllVanueList,
@@ -18,6 +19,7 @@ import {
   getSingleVolunteer,
   loginVolunteer,
   mailSent,
+  resetPassword,
   statusUpdateCategoryController,
   updateBookingType,
   updateCategoryController,
@@ -32,6 +34,7 @@ import {
 import {
   accessMiddleware,
   AuthMiddleware,
+  forgotPasswordMiddleware,
 } from "../middlewares/authMiddleware.mjs";
 import {
   dahsboardCardAnalytics,
@@ -179,4 +182,9 @@ adminRouter.get(
   dashboardBarChartAnalytics,
 );
 // <------- dashboard analytics route end  ---------->
+
+// < -------- forget password---------- >
+adminRouter.post("/forgot-password", forgetPassword);
+adminRouter.post("/reset-password", resetPassword);
+// < -------- forget password end---------- >
 export default adminRouter;

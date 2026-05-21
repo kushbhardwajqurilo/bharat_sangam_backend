@@ -63,7 +63,7 @@ export const volunteerAuthMiddleware = catchAsync(async (req, res, next) => {
 });
 
 // admin aur volunteer both access
-const volunteerrOrAdminAuthMiddleware = async (req, res, next) => {
+export const volunteerrOrAdminAuthMiddleware = async (req, res, next) => {
   // 🔹 try worker auth first
   volunteerAuthMiddleware(req, res, (err) => {
     if (!err) {
@@ -87,3 +87,29 @@ const volunteerrOrAdminAuthMiddleware = async (req, res, next) => {
     });
   });
 };
+
+// forgot password middleware
+export const forgotPasswordMiddleware = catchAsync(async (req, res, next) => {
+  const authHeader = req["headers"]["authorization"];
+  if (!authHeader) {
+    return next(new AppError("Authorization Header Missing", 401));
+  }
+  if (!authHeader.startsWith("Bearer")) {
+    return next(new AppError("Invalid Authorization Format", 401));
+  }
+  const token = authHeader.split(" ")[1];
+  if (!token) {
+    return next(new AppError("Access Invalid", 401));
+  }
+  try {
+    const verify = jwt.verify(token, process.env.FORGET_SECRET);
+    next();
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return next(
+        new AppError("Session Expired. Please Raise Your Request Again", 401),
+      );
+    }
+    return next(new AppError("Invalid Or Malformed Session", 402));
+  }
+});

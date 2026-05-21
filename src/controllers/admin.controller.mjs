@@ -1,6 +1,7 @@
 import adminModel from "../models/adminModel.js";
 import tokenModel from "../models/tokenModel.mjs";
 import volunteerModel from "../models/volunteerModel.mjs";
+import { sendForgetTemplateEmail } from "../config/mail.config.mjs";
 import { AppError, catchAsync, sendSuccess } from "../utils/handler.mjs";
 import { compareHashPassword, hashPassword } from "../utils/hashPash.mjs";
 import jwt from "jsonwebtoken";
@@ -1254,4 +1255,74 @@ export const mailSent = catchAsync(async (req, res, next) => {
     return next(new AppError("Unable to send mail", 400));
   }
   return sendSuccess(res, "success", {}, 200, true);
+});
+
+// forget password
+
+export const forgetPassword = catchAsync(async (req, res, next) => {
+  const { email } = req.body;
+  if (!email) {
+    return next(new AppError("Email Missing", 400));
+  }
+  const isAdmin = await adminModel.findOne({ email });
+  if (!isAdmin) {
+    return next(new AppError("Emain Not Found Try Again Later"));
+  }
+  const token = jwt.sign(
+    {
+      id: isAdmin._id,
+      role: "admin",
+    },
+    process.env.FORGET_SECRET,
+    { expiresIn: "10m" },
+  );
+  const url =
+    process.env.NODE_ENV === "production"
+      ? `${process.env.FORGET_URL}?token=${token}`
+      : `${process.env.LOCAL_FORGET_URL}?token=${token}`;
+
+  const sent = sendForgetTemplateEmail(email, url);
+  return sendSuccess(res, "success", {}, 200, true);
+});
+
+export const resetPassword = catchAsync(async (req, res, next) => {
+  const { password, token } = req.body;
+  if (!token) {
+    return next(new AppError("token miising", 400));
+  }
+  if (!password) {
+    return next(new AppError("Password Missing", 400));
+  }
+  try {
+    const verify = jwt.verify(token, process.env.FORGET_SECRET);
+    // console.log("vei", verify);
+    const isAdmin = await adminModel.findOne({ _id: verify.id });
+    if (!isAdmin) {
+      return next(new AppError("Admin not found"));
+    }
+    const isAlreadyPasswordExist = await compareHashPassword(
+      password,
+      isAdmin.password,
+    );
+    if (isAlreadyPasswordExist) {
+      return next(
+        new AppError(
+          "New password cannot be the same as your old password.",
+          400,
+        ),
+      );
+    }
+    const hasNewPassword = await hashPassword(password);
+
+    isAdmin.password = hasNewPassword;
+    await isAdmin.save();
+    return sendSuccess(res, "success", {}, 201, true);
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return next(
+        new AppError("Session Expired. Please Raise Your Request Again", 401),
+      );
+    }
+    return next(new AppError("Invalid Or Malformed Session", 402));
+  }
 });
