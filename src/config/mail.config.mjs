@@ -31,8 +31,8 @@ export const sendForgetTemplateEmail = async (email, url) => {
       service: "gmail",
 
       auth: {
-        user: "kushbhardwaj8800@gmail.com",
-        pass: "uogewzjkcrdioxoc",
+        user: process.env.FORGET_EMAIL,
+        pass: process.env.EMAIL_PASSWORD,
       },
 
       tls: {
