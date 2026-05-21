@@ -75,19 +75,24 @@ export const createTicket = catchAsync(async (req, res, next) => {
   const { username, email, eventId, totalTicket, phone } = req.body;
 
   console.log("🟢 STEP 1: API HIT");
+  if (totalTicket > 5) {
+    return next(
+      new AppError("You have exceeded the maximum ticket limit.", 400),
+    );
+  }
 
+  const isAlreadyBooked = await bookingModel
+    .findOne({ eventId: eventId, phone: phone })
+    .sort({ createdAt: -1 });
+  if (isAlreadyBooked) {
+    return next(
+      new AppError(
+        "this number has already been used for booking tickets",
+        400,
+      ),
+    );
+  }
   const u_id = `BBS${Math.floor(100000 + Math.random() * 900000)}`;
-  // const isAlreadyBooked = await bookingModel
-  //   .findOne({ eventId: eventId, phone: phone })
-  //   .sort({ createdAt: -1 });
-  // if (isAlreadyBooked) {
-  //   return next(
-  //     new AppError(
-  //       "This number has already been used for booking tickets",
-  //       400,
-  //     ),
-  //   );
-  // }
   const ticket = await bookingModel.create({
     username,
     email,
