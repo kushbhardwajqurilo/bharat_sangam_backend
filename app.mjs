@@ -18,7 +18,6 @@ import subscriberRouter from "./src/routes/subscriber.route.mjs";
 import sponsorRouter from "./src/routes/sponsor.route.mjs";
 import calendarRouter from "./src/routes/calendar.route.mjs";
 import { personalMailMessage } from "./src/config/bravoConfig.mjs";
-
 const app = express();
 
 /* ================= CORE SETTINGS ================= */

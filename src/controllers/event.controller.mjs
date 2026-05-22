@@ -817,20 +817,12 @@ export const dahsboardCardAnalytics = catchAsync(async (req, res, next) => {
         usedTickets: {
           $sum: {
             $map: {
-              input: {
-                $filter: {
-                  input: "$bookings",
-                  as: "booking",
-                  cond: {
-                    $eq: ["$$booking.isUsed", true],
-                  },
-                },
-              },
+              input: "$bookings",
 
               as: "booking",
 
               in: {
-                $ifNull: ["$$booking.totalTicket", 0],
+                $ifNull: ["$$booking.visitUsers", 0],
               },
             },
           },

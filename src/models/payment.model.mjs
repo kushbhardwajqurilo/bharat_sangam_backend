@@ -8,7 +8,11 @@ const paymentSchema = new mongoose.Schema(
       unique: true,
       index: true,
     },
-
+    eventId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "events",
+    },
     paymentId: {
       type: String,
       default: null,
@@ -37,7 +41,7 @@ const paymentSchema = new mongoose.Schema(
     },
 
     phone: {
-      type: String,
+      type: Number,
       required: true,
     },
 
@@ -48,22 +52,9 @@ const paymentSchema = new mongoose.Schema(
 
     method: String,
     email: String,
-    contact: String,
-
     razorpaySignature: String,
 
     paidAt: Date,
-
-    webhookLogs: [
-      {
-        event: String,
-        payload: Object,
-        createdAt: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
   },
   {
     timestamps: true,

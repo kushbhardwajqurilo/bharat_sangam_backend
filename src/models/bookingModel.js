@@ -18,6 +18,7 @@ const bookingSchema = new mongoose.Schema(
     },
     amount: Number,
     allowVisitors: { type: Number, required: [true] },
+    visitUsers: { type: Number, default: 0 },
     paymentStatus: {
       type: String,
       enum: ["pending", "success", "failed"],

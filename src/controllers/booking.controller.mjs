@@ -72,6 +72,7 @@ import mongoose from "mongoose";
 //   canvas.createPNGStream().pipe(res);
 // });
 export const createTicket = catchAsync(async (req, res, next) => {
+  console.log("payment data", req.body.payment);
   const { username, email, eventId, totalTicket, phone } = req.body;
 
   console.log("🟢 STEP 1: API HIT");
@@ -206,6 +207,7 @@ export const verifyTicket = catchAsync(async (req, res, next) => {
 
     // Deduct visitors
     ticket.allowVisitors -= visitorsComing;
+    ticket.visitUsers += visitorsComing;
 
     // If all visitors entered → mark used
     if (ticket.allowVisitors === 0) {
