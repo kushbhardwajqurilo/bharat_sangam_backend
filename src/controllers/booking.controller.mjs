@@ -189,7 +189,7 @@ export const verifyTicket = catchAsync(async (req, res, next) => {
     }
 
     // If no visitors left
-    if (ticket.allowVisitors <= 0) {
+    if (ticket.allowVisitors <= 0 || ticket.totalTicket === ticket.visitUsers) {
       ticket.isUsed = true;
       await ticket.save();
       return next(new AppError("All visitors already verified", 400));
