@@ -5,6 +5,8 @@ import {
   getSingleBookingDetails,
   getTicketDetails,
   getTicketDetailsByPhone,
+  nonVisitUser,
+  reserveTickets,
   verifyTicket,
   //   generateTicketImage,
 } from "../controllers/booking.controller.mjs";
@@ -16,9 +18,11 @@ import {
   volunteerAuthMiddleware,
 } from "../middlewares/authMiddleware.mjs";
 const BookingRouter = express.Router();
+BookingRouter.post("/reservations", reserveTickets);
 BookingRouter.post("/create-ticket", createTicket);
 BookingRouter.get("/ticket-detail", getTicketDetails);
 BookingRouter.get("/details", getTicketDetailsByPhone);
+BookingRouter.get("/non-visited-users", nonVisitUser);
 BookingRouter.put(
   "/ticket-verify",
   volunteerAuthMiddleware,
@@ -37,5 +41,4 @@ BookingRouter.get(
   accessMiddleware("admin", "volunteer"),
   getSingleBookingDetails,
 );
-
 export default BookingRouter;

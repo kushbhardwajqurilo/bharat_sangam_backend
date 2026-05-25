@@ -68,7 +68,7 @@ const allowOrigins = [
     : "http://localhost:3000",
   process.env.NODE_ENV === "production"
     ? "https://bharatbhaktisangam.com"
-    : "https://l3zz8htl-3000.inc1.devtunnels.ms",
+    : "https://l3zz8htl-3011.inc1.devtunnels.ms",
 ];
 
 const corsOptions = {

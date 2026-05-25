@@ -259,6 +259,7 @@ function formatWhatsAppNumber(phone) {
 const worker = new Worker(
   "ticketQueue",
   async (job) => {
+    console.log("ticket data", job.data);
     console.log("📦 JOB RECEIVED:", job.id);
     const { ticketId, email, u_id, allowVisitors, username, phone } = job.data;
 

@@ -55,12 +55,21 @@ const paymentSchema = new mongoose.Schema(
     razorpaySignature: String,
 
     paidAt: Date,
+    bookingId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "booking",
+      default: null,
+    },
   },
   {
     timestamps: true,
   },
 );
-
+paymentSchema.index({ orderId: 1 }, { unique: true });
+paymentSchema.index(
+  { paymentId: 1 },
+  { unique: true, partialFilterExpression: { paymentId: { $type: "string" } } },
+);
 const Payment = mongoose.model("Payment", paymentSchema);
 
 export default Payment;

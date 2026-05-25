@@ -37,6 +37,7 @@ const bookingSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
-bookingSchema.index({ u_id: 1 });
+bookingSchema.index({ eventId: 1, phone: 1 }, { unique: true });
+bookingSchema.index({ u_id: 1 }, { unique: true });
 const bookingModel = mongoose.model("booking", bookingSchema);
 export default bookingModel;

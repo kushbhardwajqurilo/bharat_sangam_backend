@@ -26,6 +26,7 @@ dotenv.config();
 import app from "./app.mjs";
 import connectDB from "./src/config/databse.mjs";
 import mongoose from "mongoose";
+import startCronJobs from "./src/config/cron.mjs";
 
 const PORT = process.env.PORT || 8001;
 
@@ -34,7 +35,7 @@ let server;
 const startServer = async () => {
   try {
     await connectDB(); // ✅ connect DB first
-    console.log(process.env.NODE_ENV);
+    startCronJobs();
     server = app.listen(PORT, "0.0.0.0", () => {
       console.log(`🚀 Server Running at http://localhost:${PORT}`);
     });

@@ -10,6 +10,8 @@ import puppeteer from "puppeteer";
 import { ticketQueue } from "../queues/ticket.queue.mjs";
 import eventModel from "../models/eventModel.js";
 import mongoose from "mongoose";
+import Payment from "../models/payment.model.mjs";
+import bookingReserveModel from "../models/bookingReserveModel.mjs";
 
 // export const createTicket = catchAsync(async (req, res, next) => {
 //   const {
@@ -71,83 +73,582 @@ import mongoose from "mongoose";
 //   res.setHeader("Content-Type", "image/png");
 //   canvas.createPNGStream().pipe(res);
 // });
+
+// export const createTicket = catchAsync(async (req, res, next) => {
+//   console.log("payment data", req.body.payment);
+//   const { username, email, eventId, totalTicket, phone } = req.body;
+
+//   console.log("🟢 STEP 1: API HIT");
+//   if (totalTicket > 5) {
+//     return next(
+//       new AppError("You have exceeded the maximum ticket limit.", 400),
+//     );
+//   }
+
+//   const isAlreadyBooked = await bookingModel
+//     .findOne({ eventId: eventId, phone: phone })
+//     .sort({ createdAt: -1 });
+//   if (isAlreadyBooked) {
+//     return next(
+//       new AppError(
+//         "this number has already been used for booking tickets",
+//         400,
+//       ),
+//     );
+//   }
+//   const u_id = `BBS${Math.floor(100000 + Math.random() * 900000)}`;
+//   const ticket = await bookingModel.create({
+//     username,
+//     email,
+//     eventId,
+//     u_id,
+//     totalTicket,
+//     allowVisitors: totalTicket,
+//     phone: Number(phone),
+//   });
+//   // Check + reduce tickets (atomic)
+
+//   const event = await eventModel.findOneAndUpdate(
+//     { _id: eventId, availableTickets: { $gte: totalTicket } },
+//     {
+//       $inc: {
+//         availableTickets: -totalTicket,
+//         bookedSeats: totalTicket,
+//       },
+//     },
+//     { new: true },
+//   );
+
+//   if (!event) {
+//     return next(new AppError("Tickets sold out", 400));
+//   }
+//   // console.log("🟢 STEP 2: Ticket Created", ticket._id);
+
+//   // 🔥 ADD JOB WITH DEBUG
+//   try {
+//     // console.log("🟡 STEP 3: Adding job to queue...");
+
+//     const job = await ticketQueue.add("generateTicket", {
+//       ticketId: ticket._id,
+//       username,
+//       email,
+//       phone: Number(phone),
+//       u_id,
+//       allowVisitors: totalTicket,
+//     });
+
+//     // console.log("✅ STEP 4: JOB ADDED SUCCESS:", job.id);
+//     // console.log("queue jon", job);
+//   } catch (err) {
+//     console.error("❌ STEP 4 ERROR: Queue failed", err);
+//   }
+
+//   // console.log("🟢 STEP 5: Sending response");
+
+//   res.status(200).json({
+//     success: true,
+//     message: "Ticket created 🎉",
+//     bookingId: u_id,
+//   });
+// });
+
+// export const createTicket = catchAsync(async (req, res, next) => {
+//   const session = await mongoose.startSession();
+//   let ticket;
+
+//   try {
+//     await session.withTransaction(async () => {
+//       const { username, email, eventId, totalTicket, phone, payment } =
+//         req.body;
+//       const normalizedPhone = Number(phone);
+
+//       if (totalTicket > 5) {
+//         throw new AppError("You have exceeded the maximum ticket limit.", 400);
+//       }
+
+//       if (
+//         !payment?.orderId ||
+//         !payment?.paymentId ||
+//         payment.status !== "paid"
+//       ) {
+//         throw new AppError("Valid paid payment is required.", 400);
+//       }
+
+//       const existingPayment = await Payment.findOne({
+//         $or: [{ orderId: payment.orderId }, { paymentId: payment.paymentId }],
+//       }).session(session);
+
+//       if (existingPayment?.bookingId) {
+//         ticket = await bookingModel
+//           .findById(existingPayment.bookingId)
+//           .session(session);
+//         return;
+//       }
+
+//       const event = await eventModel.findOneAndUpdate(
+//         {
+//           _id: eventId,
+//           isActive: true,
+//           availableTickets: { $gte: totalTicket },
+//         },
+//         {
+//           $inc: {
+//             availableTickets: -totalTicket,
+//             bookedSeats: totalTicket,
+//           },
+//         },
+//         { new: true, session },
+//       );
+
+//       if (!event) {
+//         throw new AppError("Tickets sold out", 400);
+//       }
+
+//       const u_id = `BBS${Math.floor(100000 + Math.random() * 900000)}`;
+
+//       [ticket] = await bookingModel.create(
+//         [
+//           {
+//             username,
+//             email,
+//             eventId,
+//             u_id,
+//             totalTicket,
+//             amount: payment.amount,
+//             allowVisitors: totalTicket,
+//             phone: normalizedPhone,
+//             paymentStatus: "success",
+//           },
+//         ],
+//         { session },
+//       );
+
+//       await Payment.findOneAndUpdate(
+//         { orderId: payment.orderId },
+//         {
+//           $set: {
+//             ...payment,
+//             eventId,
+//             bookingId: ticket._id,
+//             phone: normalizedPhone,
+//             paidAt: payment.paidAt ? new Date(payment.paidAt) : undefined,
+//           },
+//         },
+//         { new: true, upsert: true, session },
+//       );
+//     });
+
+//     await session.endSession();
+
+//     await ticketQueue.add("generateTicket", {
+//       ticketId: ticket._id,
+//       username: ticket.username,
+//       email: ticket.email,
+//       phone: ticket.phone,
+//       u_id: ticket.u_id,
+//       allowVisitors: ticket.allowVisitors,
+//     });
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Ticket created",
+//       bookingId: ticket.u_id,
+//     });
+//   } catch (error) {
+//     await session.endSession();
+//     return next(error);
+//   }
+// });
+
 export const createTicket = catchAsync(async (req, res, next) => {
-  console.log("payment data", req.body.payment);
-  const { username, email, eventId, totalTicket, phone } = req.body;
+  const session = await mongoose.startSession();
+  let ticket;
 
-  console.log("🟢 STEP 1: API HIT");
-  if (totalTicket > 5) {
-    return next(
-      new AppError("You have exceeded the maximum ticket limit.", 400),
-    );
-  }
-
-  const isAlreadyBooked = await bookingModel
-    .findOne({ eventId: eventId, phone: phone })
-    .sort({ createdAt: -1 });
-  if (isAlreadyBooked) {
-    return next(
-      new AppError(
-        "this number has already been used for booking tickets",
-        400,
-      ),
-    );
-  }
-  const u_id = `BBS${Math.floor(100000 + Math.random() * 900000)}`;
-  const ticket = await bookingModel.create({
-    username,
-    email,
-    eventId,
-    u_id,
-    totalTicket,
-    allowVisitors: totalTicket,
-    phone: Number(phone),
-  });
-  // Check + reduce tickets (atomic)
-
-  const event = await eventModel.findOneAndUpdate(
-    { _id: eventId, availableTickets: { $gte: totalTicket } },
-    {
-      $inc: {
-        availableTickets: -totalTicket,
-        bookedSeats: totalTicket,
-      },
-    },
-    { new: true },
-  );
-
-  if (!event) {
-    return next(new AppError("Tickets sold out", 400));
-  }
-  // console.log("🟢 STEP 2: Ticket Created", ticket._id);
-
-  // 🔥 ADD JOB WITH DEBUG
   try {
-    // console.log("🟡 STEP 3: Adding job to queue...");
+    await session.withTransaction(async () => {
+      const {
+        username,
+        email,
+        eventId,
+        totalTicket,
+        phone,
+        reservationId,
+        payment,
+      } = req.body;
 
-    const job = await ticketQueue.add("generateTicket", {
-      ticketId: ticket._id,
-      username,
-      email,
-      phone: Number(phone),
-      u_id,
-      allowVisitors: totalTicket,
+      const normalizedPhone = Number(phone);
+
+      if (!reservationId) {
+        throw new AppError("Reservation is required.", 400);
+      }
+
+      if (
+        !payment?.orderId ||
+        !payment?.paymentId ||
+        payment.status !== "paid"
+      ) {
+        throw new AppError("Valid paid payment is required.", 400);
+      }
+
+      const existingPayment = await Payment.findOne({
+        $or: [{ orderId: payment.orderId }, { paymentId: payment.paymentId }],
+      }).session(session);
+
+      if (existingPayment?.bookingId) {
+        ticket = await bookingModel
+          .findById(existingPayment.bookingId)
+          .session(session);
+        return;
+      }
+
+      const reservation = await bookingReserveModel
+        .findOne({
+          _id: reservationId,
+          eventId,
+          phone: normalizedPhone,
+          totalTicket,
+          status: "reserved",
+          expiresAt: { $gt: new Date() },
+        })
+        .session(session);
+
+      if (!reservation) {
+        throw new AppError("Reservation expired or invalid.", 400);
+      }
+
+      const alreadyBooked = await bookingModel
+        .findOne({ eventId, phone: normalizedPhone })
+        .session(session);
+
+      if (alreadyBooked) {
+        throw new AppError(
+          "this number has already been used for booking tickets",
+          400,
+        );
+      }
+
+      const u_id = `BBS${Math.floor(100000 + Math.random() * 900000)}`;
+
+      [ticket] = await bookingModel.create(
+        [
+          {
+            username,
+            email,
+            eventId,
+            u_id,
+            totalTicket,
+            amount: payment.amount,
+            allowVisitors: totalTicket,
+            phone: normalizedPhone,
+            paymentStatus: "success",
+          },
+        ],
+        { session },
+      );
+
+      await Payment.findOneAndUpdate(
+        { orderId: payment.orderId },
+        {
+          $set: {
+            ...payment,
+            eventId,
+            bookingId: ticket._id,
+            phone: normalizedPhone,
+            paidAt: payment.paidAt ? new Date(payment.paidAt) : undefined,
+          },
+        },
+        { new: true, upsert: true, session },
+      );
+
+      await bookingReserveModel
+        .updateOne(
+          { _id: reservation._id, status: "reserved" },
+          {
+            $set: {
+              status: "confirmed",
+              orderId: payment.orderId,
+              paymentId: payment.paymentId,
+              bookingId: ticket._id,
+            },
+          },
+        )
+        .session(session);
     });
 
-    // console.log("✅ STEP 4: JOB ADDED SUCCESS:", job.id);
-    // console.log("queue jon", job);
-  } catch (err) {
-    console.error("❌ STEP 4 ERROR: Queue failed", err);
+    const sessionResponse = await session.endSession();
+    console.log("session response", sessionResponse);
+    await ticketQueue.add("generateTicket", {
+      ticketId: ticket._id,
+      username: ticket.username,
+      email: ticket.email,
+      phone: ticket.phone,
+      u_id: ticket.u_id,
+      allowVisitors: ticket.allowVisitors,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Ticket created",
+      bookingId: ticket.u_id,
+    });
+  } catch (error) {
+    await session.endSession();
+    return next(error);
   }
-
-  // console.log("🟢 STEP 5: Sending response");
-
-  res.status(200).json({
-    success: true,
-    message: "Ticket created 🎉",
-    bookingId: u_id,
-  });
 });
+
+// export const createTicket = catchAsync(async (req, res, next) => {
+//   const session = await mongoose.startSession();
+//   let ticket;
+
+//   try {
+//     // ── Manually start transaction for explicit commit control ────────────────
+//     session.startTransaction();
+
+//     const {
+//       username,
+//       email,
+//       eventId,
+//       totalTicket,
+//       phone,
+//       reservationId,
+//       payment,
+//     } = req.body;
+
+//     // ── Validate inputs ───────────────────────────────────────────────────────
+//     if (!reservationId) {
+//       throw new AppError("Reservation is required.", 400);
+//     }
+
+//     if (!payment?.orderId || !payment?.paymentId || payment.status !== "paid") {
+//       throw new AppError("Valid paid payment is required.", 400);
+//     }
+
+//     const normalizedPhone = Number(phone);
+
+//     // ── Idempotency: if payment already processed, return existing ticket ─────
+//     const existingPayment = await Payment.findOne({
+//       $or: [{ orderId: payment.orderId }, { paymentId: payment.paymentId }],
+//     }).session(session);
+
+//     if (existingPayment?.bookingId) {
+//       ticket = await bookingModel
+//         .findById(existingPayment.bookingId)
+//         .session(session);
+
+//       // Commit and exit early — ticket already exists
+//       await session.commitTransaction();
+//       await session.endSession();
+
+//       return res.status(200).json({
+//         success: true,
+//         message: "Ticket already created",
+//         bookingId: ticket.u_id,
+//       });
+//     }
+
+//     // ── Validate reservation ──────────────────────────────────────────────────
+//     const reservation = await bookingReserveModel
+//       .findOne({
+//         _id: reservationId,
+//         eventId,
+//         phone: normalizedPhone,
+//         totalTicket,
+//         status: "reserved",
+//         expiresAt: { $gt: new Date() },
+//       })
+//       .session(session);
+
+//     if (!reservation) {
+//       throw new AppError("Reservation expired or invalid.", 400);
+//     }
+
+//     // ── Check duplicate booking ───────────────────────────────────────────────
+//     const alreadyBooked = await bookingModel
+//       .findOne({ eventId, phone: normalizedPhone })
+//       .session(session);
+
+//     if (alreadyBooked) {
+//       throw new AppError(
+//         "This number has already been used for booking tickets.",
+//         400,
+//       );
+//     }
+
+//     // ── Generate unique booking ID ────────────────────────────────────────────
+//     const u_id = `BBS${Math.floor(100000 + Math.random() * 900000)}`;
+
+//     // ── Create booking ────────────────────────────────────────────────────────
+//     [ticket] = await bookingModel.create(
+//       [
+//         {
+//           username,
+//           email,
+//           eventId,
+//           u_id,
+//           totalTicket,
+//           amount: payment.amount,
+//           allowVisitors: totalTicket,
+//           phone: normalizedPhone,
+//           paymentStatus: "success",
+//         },
+//       ],
+//       { session },
+//     );
+
+//     // ── Upsert payment record ─────────────────────────────────────────────────
+//     await Payment.findOneAndUpdate(
+//       { orderId: payment.orderId },
+//       {
+//         $set: {
+//           ...payment,
+//           eventId,
+//           bookingId: ticket._id,
+//           phone: normalizedPhone,
+//           paidAt: payment.paidAt ? new Date(payment.paidAt) : new Date(),
+//         },
+//       },
+//       { new: true, upsert: true, session },
+//     );
+
+//     // ── Confirm reservation ───────────────────────────────────────────────────
+//     await bookingReserveModel
+//       .updateOne(
+//         { _id: reservation._id, status: "reserved" },
+//         {
+//           $set: {
+//             status: "confirmed",
+//             orderId: payment.orderId,
+//             paymentId: payment.paymentId,
+//             bookingId: ticket._id,
+//           },
+//         },
+//       )
+//       .session(session);
+
+//     // ── Commit transaction — data is now durable in DB ────────────────────────
+//     await session.commitTransaction();
+//     await session.endSession();
+
+//     // ── Enqueue ticket generation AFTER commit (fixes race condition) ─────────
+//     // The worker's aggregate query will now always find the booking document.
+//     await ticketQueue.add("generateTicket", {
+//       ticketId: ticket._id.toString(),
+//       username: ticket.username,
+//       email: ticket.email,
+//       phone: ticket.phone,
+//       u_id: ticket.u_id,
+//       allowVisitors: ticket.allowVisitors,
+//     });
+
+//     // ── Respond to client ─────────────────────────────────────────────────────
+//     return res.status(200).json({
+//       success: true,
+//       message: "Ticket created",
+//       bookingId: ticket.u_id,
+//     });
+//   } catch (error) {
+//     // Only abort if the transaction is still open
+//     if (session.inTransaction()) {
+//       await session.abortTransaction();
+//     }
+//     await session.endSession();
+//     return next(error);
+//   }
+// });
+
+// reserver ticket
+export const reserveTickets = catchAsync(async (req, res, next) => {
+  const session = await mongoose.startSession();
+
+  try {
+    let reservation;
+
+    await session.withTransaction(async () => {
+      const { username, email, eventId, totalTicket, phone, ticketType } =
+        req.body;
+      const normalizedPhone = Number(phone);
+
+      if (!eventId || !totalTicket || !normalizedPhone) {
+        throw new AppError("Invalid reservation request.", 400);
+      }
+
+      if (totalTicket > 5) {
+        throw new AppError("You have exceeded the maximum ticket limit.", 400);
+      }
+
+      const existingBooking = await bookingModel
+        .findOne({ eventId, phone: normalizedPhone })
+        .session(session);
+
+      if (existingBooking) {
+        throw new AppError(
+          "this number has already been used for booking tickets",
+          400,
+        );
+      }
+
+      const existingReservation = await bookingReserveModel
+        .findOne({
+          eventId,
+          phone: normalizedPhone,
+          status: "reserved",
+          expiresAt: { $gt: new Date() },
+        })
+        .session(session);
+
+      if (existingReservation) {
+        reservation = existingReservation;
+        return;
+      }
+
+      const event = await eventModel.findOneAndUpdate(
+        {
+          _id: eventId,
+          isActive: true,
+          availableTickets: { $gte: totalTicket },
+        },
+        {
+          $inc: {
+            availableTickets: -totalTicket,
+            bookedSeats: totalTicket,
+          },
+        },
+        { new: true, session },
+      );
+
+      if (!event) {
+        throw new AppError("Tickets sold out", 400);
+      }
+
+      [reservation] = await bookingReserveModel.create(
+        [
+          {
+            eventId,
+            username,
+            email,
+            phone: normalizedPhone,
+            totalTicket,
+            ticketType,
+            expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+          },
+        ],
+        { session },
+      );
+    });
+
+    res.status(201).json({
+      success: true,
+      data: {
+        reservationId: reservation._id,
+        expiresAt: reservation.expiresAt,
+      },
+    });
+  } finally {
+    await session.endSession();
+  }
+});
+
 // ticket details bt scan
 export const getTicketDetails = catchAsync(async (req, res, next) => {
   const { u_id } = req.query;
@@ -420,4 +921,278 @@ export const getSingleBookingDetails = catchAsync(async (req, res, next) => {
   ]);
   console.log("sinngle", result);
   return sendSuccess(res, "success", result[0], 200, true);
+});
+
+// non-visit user
+// export const nonVisitUser = catchAsync(async (req, res, next) => {
+//   let { page = 1, limit = 10 } = req?.query;
+//   const { search } = req?.query;
+
+//   page = parseInt(page);
+//   limit = parseInt(limit);
+//   const skip = (page - 1) * limit;
+
+//   const pipeline = [];
+
+//   if (search && search.trim() !== "") {
+//     pipeline.push({
+//       $match: {
+//         $or: [
+//           { username: { $regex: search, $options: "i" } },
+//           { email: { $regex: search, $options: "i" } },
+//           {
+//             $expr: {
+//               $regexMatch: {
+//                 input: { $toString: "$phone" },
+//                 regex: search,
+//                 options: "i",
+//               },
+//             },
+//           },
+//           { u_id: { $regex: search, $options: "i" } },
+//         ],
+//       },
+//     });
+//   }
+
+//   pipeline.push(
+//     { $match: { $expr: { $ne: ["$totalTicket", "$visitUsers"] } } },
+//     { $sort: { createdAt: -1 } },
+//     { $skip: skip },
+//     { $limit: limit },
+
+//     {
+//       $lookup: {
+//         from: "events",
+//         let: { eventId: "$eventId" },
+//         pipeline: [
+//           {
+//             $match: {
+//               $expr: { $eq: ["$_id", "$$eventId"] },
+//             },
+//           },
+//           {
+//             $project: {
+//               _id: 0,
+//               eventName: 1,
+//             },
+//           },
+//         ],
+//         as: "event",
+//       },
+//     },
+//     {
+//       $unwind: {
+//         path: "$event",
+//         preserveNullAndEmptyArrays: true,
+//       },
+//     },
+//     {
+//       $project: {
+//         _id: 1,
+//         name: { $ifNull: ["$username", "N/A"] },
+//         email: 1,
+//         tickets: "$totalTicket",
+//         eventName: { $ifNull: ["$event.eventName", "N/A"] },
+//         ticketId: "$u_id",
+//         contact: "$phone",
+//         bookingDate: `$createdAt`,
+//         nonVisitedUser: { $subtract: ["$totalTicket", "$visitUsers"] },
+//       },
+//     },
+//   );
+
+//   //
+//   let countQuery = {};
+//   if (search && search.trim() !== "") {
+//     countQuery = {
+//       $or: [
+//         { username: { $regex: search, $options: "i" } },
+//         { email: { $regex: search, $options: "i" } },
+//         {
+//           $expr: {
+//             $regexMatch: {
+//               input: { $toString: "$phone" },
+//               regex: search,
+//               options: "i",
+//             },
+//           },
+//         },
+//         { u_id: { $regex: search, $options: "i" } },
+//       ],
+//     };
+//   }
+//   countPipeline.push({
+//     $match: {
+//       $expr: {
+//         $ne: ["$totalTicket", "$visitUsers"],
+//       },
+//     },
+//   });
+
+//   countPipeline.push({
+//     $count: "total",
+//   });
+//   const [result, total] = await Promise.all([
+//     bookingModel.aggregate(pipeline),
+//     bookingModel.countDocuments(countQuery),
+//   ]);
+//   return res.json({ result, total });
+// });
+
+export const nonVisitUser = catchAsync(async (req, res, next) => {
+  let { page = 1, limit = 10 } = req.query;
+  const { search } = req.query;
+
+  page = parseInt(page);
+  limit = parseInt(limit);
+
+  const skip = (page - 1) * limit;
+
+  //  Common Match Query
+  const matchQuery = {
+    $expr: {
+      $ne: ["$totalTicket", "$visitUsers"],
+    },
+  };
+
+  //  Search Filter
+  if (search && search.trim() !== "") {
+    matchQuery.$or = [
+      { username: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
+      {
+        $expr: {
+          $regexMatch: {
+            input: { $toString: "$phone" },
+            regex: search,
+            options: "i",
+          },
+        },
+      },
+      { u_id: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  //  Main Pipeline
+  const pipeline = [
+    {
+      $match: matchQuery,
+    },
+
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+
+    {
+      $skip: skip,
+    },
+
+    {
+      $limit: limit,
+    },
+
+    {
+      $lookup: {
+        from: "events",
+        let: { eventId: "$eventId" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: ["$_id", "$$eventId"],
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              eventName: 1,
+            },
+          },
+        ],
+        as: "event",
+      },
+    },
+
+    {
+      $unwind: {
+        path: "$event",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    {
+      $project: {
+        _id: 1,
+
+        name: {
+          $ifNull: ["$username", "N/A"],
+        },
+
+        email: 1,
+
+        tickets: "$totalTicket",
+
+        visitUsers: {
+          $ifNull: ["$visitUsers", 0],
+        },
+
+        nonVisitCount: {
+          $subtract: [
+            "$totalTicket",
+            {
+              $ifNull: ["$visitUsers", 0],
+            },
+          ],
+        },
+
+        eventName: {
+          $ifNull: ["$event.eventName", "N/A"],
+        },
+
+        ticketId: "$u_id",
+
+        contact: "$phone",
+
+        bookingDate: "$createdAt",
+      },
+    },
+  ];
+
+  //  Total Count Pipeline
+  const totalPipeline = [
+    {
+      $match: matchQuery,
+    },
+    {
+      $count: "total",
+    },
+  ];
+
+  //  Execute Queries
+  const [result, totalResult] = await Promise.all([
+    bookingModel.aggregate(pipeline),
+    bookingModel.aggregate(totalPipeline),
+  ]);
+
+  const total = totalResult[0]?.total || 0;
+
+  return sendSuccess(
+    res,
+    "success",
+    {
+      data: result,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    },
+    200,
+    true,
+  );
 });

@@ -643,7 +643,7 @@ export const getLatestEvent = catchAsync(async (req, res, next) => {
         as: "bookingType",
       },
     },
-    { $unwind: "$bookingType" },
+    // { $unwind: "$bookingType" },
 
     //  Final shaping
     {
@@ -672,8 +672,14 @@ export const getLatestEvent = catchAsync(async (req, res, next) => {
 
         //  BookingType (limited fields)
         bookingType: {
-          name: "$bookingType.bookingType", // field name apne schema ke hisab se change kar lena
-          price: "$bookingType.price",
+          $map: {
+            input: "$bookingType",
+            as: "type",
+            in: {
+              name: "$$type.bookingType",
+              price: "$$type.price",
+            },
+          },
         },
 
         //  Artists (limited fields)
