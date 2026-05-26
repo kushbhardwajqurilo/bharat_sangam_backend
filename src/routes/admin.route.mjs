@@ -164,15 +164,15 @@ adminRouter.post("/email", upload.array("attachments", 5), mailSent);
 
 adminRouter.get(
   "/dashboard/analytics",
-  // AuthMiddleware,
-  // accessMiddleware("admin"),
+  AuthMiddleware,
+  accessMiddleware("admin"),
   dahsboardCardAnalytics,
 );
 
 adminRouter.get(
   "/dashboard/booking-trend",
-  AuthMiddleware,
-  accessMiddleware("admin"),
+  // AuthMiddleware,
+  // accessMiddleware("admin"),
   dashboardLineChartAnalytics,
 );
 adminRouter.get(

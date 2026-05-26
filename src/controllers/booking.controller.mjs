@@ -745,7 +745,7 @@ export const getTicketDetailsByPhone = catchAsync(async (req, res, next) => {
     .findOne({ phone: cleaned, eventId: event?._id })
     .sort({ createdAt: -1 });
   if (!ticket) {
-    return next(new AppError("ticket not found", 400));
+    return sendSuccess(res, "ticket not found", {}, 200, true);
   }
   return sendSuccess(res, "success", ticket, 200, true);
 });

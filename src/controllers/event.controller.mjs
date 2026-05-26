@@ -1037,6 +1037,84 @@ export const dahsboardCardAnalytics = catchAsync(async (req, res, next) => {
 //     });
 //   },
 // );
+
+// export const dashboardLineChartAnalytics = catchAsync(
+//   async (req, res, next) => {
+//     const data = await bookingModel.aggregate([
+//       // 🔹 Group By Real Date
+//       {
+//         $group: {
+//           _id: {
+//             year: {
+//               $year: {
+//                 date: "$createdAt",
+//                 timezone: "Asia/Kolkata",
+//               },
+//             },
+
+//             month: {
+//               $month: {
+//                 date: "$createdAt",
+//                 timezone: "Asia/Kolkata",
+//               },
+//             },
+
+//             day: {
+//               $dayOfMonth: {
+//                 date: "$createdAt",
+//                 timezone: "Asia/Kolkata",
+//               },
+//             },
+//           },
+
+//           totalTickets: {
+//             $sum: "$totalTicket",
+//           },
+
+//           totalBookings: {
+//             $sum: 1,
+//           },
+//         },
+//       },
+
+//       // 🔹 Proper Date Sorting
+//       {
+//         $sort: {
+//           "_id.year": 1,
+//           "_id.month": 1,
+//           "_id.day": 1,
+//         },
+//       },
+
+//       // 🔹 Final Response
+//       {
+//         $project: {
+//           _id: 0,
+
+//           date: {
+//             $concat: [
+//               { $toString: "$_id.day" },
+//               "-",
+//               { $toString: "$_id.month" },
+//               "-",
+//               { $toString: "$_id.year" },
+//             ],
+//           },
+
+//           totalTickets: 1,
+
+//           totalBookings: 1,
+//         },
+//       },
+//     ]);
+
+//     return res.status(200).json({
+//       success: true,
+//       data,
+//     });
+//   },
+// );
+
 export const dashboardLineChartAnalytics = catchAsync(
   async (req, res, next) => {
     const data = await bookingModel.aggregate([
@@ -1106,6 +1184,21 @@ export const dashboardLineChartAnalytics = catchAsync(
         },
       },
     ]);
+
+    // // 🔹 Add Extra Object
+    // data.push(
+    //   {
+    //     totalTickets: 77,
+    //     totalBookings: 30,
+    //     date: "17-5-2026",
+    //   },
+
+    //   {
+    //     totalTickets: 68,
+    //     totalBookings: 25,
+    //     date: "16-5-2026",
+    //   },
+    // );
 
     return res.status(200).json({
       success: true,
