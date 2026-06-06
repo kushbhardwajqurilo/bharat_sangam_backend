@@ -439,7 +439,7 @@ export const generateTicketHTML = (data) => {
                 src="https://res.cloudinary.com/dqwc7j44b/image/upload/v1780738731/SAVE_20260605_163802_1_qhzk1i.jpg"
                 alt="Fusion Bhajan Jam"
               />
-              <small>Bhavna Pandit</small>
+              <small>Fusion Bhajan Jam</small>
             </div>
           </div>
         </div>
