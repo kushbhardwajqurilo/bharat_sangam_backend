@@ -1043,19 +1043,15 @@ export const getSingleBookingDetails = catchAsync(async (req, res, next) => {
 export const nonVisitUser = catchAsync(async (req, res, next) => {
   let { page = 1, limit = 10 } = req.query;
   const { search } = req.query;
-
   page = parseInt(page);
   limit = parseInt(limit);
-
   const skip = (page - 1) * limit;
-
   //  Common Match Query
   const matchQuery = {
     $expr: {
       $ne: ["$totalTicket", "$visitUsers"],
     },
   };
-
   //  Search Filter
   if (search && search.trim() !== "") {
     matchQuery.$or = [
@@ -1073,27 +1069,22 @@ export const nonVisitUser = catchAsync(async (req, res, next) => {
       { u_id: { $regex: search, $options: "i" } },
     ];
   }
-
   //  Main Pipeline
   const pipeline = [
     {
       $match: matchQuery,
     },
-
     {
       $sort: {
         createdAt: -1,
       },
     },
-
     {
       $skip: skip,
     },
-
     {
       $limit: limit,
     },
-
     {
       $lookup: {
         from: "events",
@@ -1116,30 +1107,23 @@ export const nonVisitUser = catchAsync(async (req, res, next) => {
         as: "event",
       },
     },
-
     {
       $unwind: {
         path: "$event",
         preserveNullAndEmptyArrays: true,
       },
     },
-
     {
       $project: {
         _id: 1,
-
         name: {
           $ifNull: ["$username", "N/A"],
         },
-
         email: 1,
-
         tickets: "$totalTicket",
-
         visitUsers: {
           $ifNull: ["$visitUsers", 0],
         },
-
         nonVisitCount: {
           $subtract: [
             "$totalTicket",
@@ -1148,20 +1132,15 @@ export const nonVisitUser = catchAsync(async (req, res, next) => {
             },
           ],
         },
-
         eventName: {
           $ifNull: ["$event.eventName", "N/A"],
         },
-
         ticketId: "$u_id",
-
         contact: "$phone",
-
         bookingDate: "$createdAt",
       },
     },
   ];
-
   //  Total Count Pipeline
   const totalPipeline = [
     {
@@ -1171,15 +1150,12 @@ export const nonVisitUser = catchAsync(async (req, res, next) => {
       $count: "total",
     },
   ];
-
   //  Execute Queries
   const [result, totalResult] = await Promise.all([
     bookingModel.aggregate(pipeline),
     bookingModel.aggregate(totalPipeline),
   ]);
-
   const total = totalResult[0]?.total || 0;
-
   return sendSuccess(
     res,
     "success",

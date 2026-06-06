@@ -259,14 +259,14 @@ export const generateTicketHTML = (data) => {
       .band-poster {
         width: 100%;
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         gap: 25px;
         align-items: center;
       }
 
       .band-poster img {
-        width: 86px;
-        height: 75px;
+        width: 116px;
+        height: 85px;
         object-fit: cover;
         border-radius: 8px;
       }
@@ -417,16 +417,14 @@ export const generateTicketHTML = (data) => {
 
         <!-- Artists -->
         <div class="bottom-section">
-
           <div class="band-poster">
-
-            <div class="band-poster-details">
+            <!-- <div class="band-poster-details">
               <img
                 src="https://res.cloudinary.com/dqwc7j44b/image/upload/v1778827378/ravish_pandit_pj0vk7.png"
                 alt="Ravish Pandit"
               />
               <small>Ravish Pandit</small>
-            </div>
+            </div> -->
 
             <div class="band-poster-details">
               <img
@@ -438,12 +436,11 @@ export const generateTicketHTML = (data) => {
 
             <div class="band-poster-details">
               <img
-                src="https://res.cloudinary.com/dqwc7j44b/image/upload/v1778827379/bhavna_pandit_cafnqs.png"
-                alt="Bhavna Pandit"
+                src="https://res.cloudinary.com/dqwc7j44b/image/upload/v1780738731/SAVE_20260605_163802_1_qhzk1i.jpg"
+                alt="Fusion Bhajan Jam"
               />
               <small>Bhavna Pandit</small>
             </div>
-
           </div>
         </div>
 
