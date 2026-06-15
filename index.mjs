@@ -35,7 +35,7 @@ let server;
 const startServer = async () => {
   try {
     await connectDB(); // ✅ connect DB first
-    startCronJobs();
+    // startCronJobs();
     server = app.listen(PORT, "0.0.0.0", () => {
       console.log(`🚀 Server Running at http://localhost:${PORT}`);
     });

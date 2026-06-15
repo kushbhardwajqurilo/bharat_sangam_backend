@@ -75,6 +75,33 @@ import bookingReserveModel from "../models/bookingReserveModel.mjs";
 // });
 
 export const createTicket = catchAsync(async (req, res, next) => {
+  ///
+  const latestEvent = await eventModel.findOne().sort({ createdAt: -1 });
+
+  if (!latestEvent) {
+    return res.status(404).json({
+      success: false,
+      message: "No event found",
+    });
+  }
+
+  // Event end datetime banao
+  const [hours, minutes] = latestEvent.endTime.split(":");
+
+  const eventEndDateTime = new Date(latestEvent.date);
+  eventEndDateTime.setHours(Number(hours));
+  eventEndDateTime.setMinutes(Number(minutes));
+  eventEndDateTime.setSeconds(0);
+
+  const currentDateTime = new Date();
+
+  if (currentDateTime > eventEndDateTime) {
+    return res.status(200).json({
+      success: true,
+      message: "Event has been ended",
+    });
+  }
+
   // console.log("payment data", req.body.payment);
   const { username, email, eventId, totalTicket, phone } = req.body;
 
