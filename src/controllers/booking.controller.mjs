@@ -96,10 +96,7 @@ export const createTicket = catchAsync(async (req, res, next) => {
   const currentDateTime = new Date();
 
   if (currentDateTime > eventEndDateTime) {
-    return res.status(200).json({
-      success: true,
-      message: "Event has been ended",
-    });
+    return next(new AppError("Event has been ended", 400));
   }
 
   // console.log("payment data", req.body.payment);
