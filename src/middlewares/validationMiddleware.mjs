@@ -1,4 +1,4 @@
-export const validateInfluencerRequest = (schema) => {
+export const validateRequest = (schema) => {
     return async (req, res, next) => {
         const result = await schema.safeParseAsync(req.body);
 
