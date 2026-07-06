@@ -65,3 +65,26 @@ export const getAllInfluencerRequestQuerySchema = z.object({
 export const influencerParamsSchema = z.object({
     id: z.string().refine(mongoose.Types.ObjectId.isValid, "Invalid influencer ID")
 });
+export const multipleInfluencerDeleteSchema = z.object({
+    ids: z
+        .array(
+            z.string().refine(
+                (id) => mongoose.Types.ObjectId.isValid(id),
+                {
+                    message: "Invalid ObjectId",
+                }
+            )
+        )
+        .min(1, "At least one influencer ID is required")
+        .max(100, "Maximum 100 IDs are allowed"),
+});
+
+// influencer status update request
+
+export const influencerStatusSchema = z.object({
+    id: z.string().trim().refine(mongoose.Types.ObjectId.isValid, "Invalid influencer ID"),
+
+    status: z.string().trim().toLowerCase().min(1, "Status requrired").refine((value) => ["approved", "rejected"].includes(value), {
+        message: "Invalid Status"
+    })
+});

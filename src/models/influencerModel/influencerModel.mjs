@@ -61,6 +61,11 @@ const influencerSchema = new mongoose.Schema(
             type: String,
             default: "_blank.png",
         },
+        status: {
+            type: String,
+            enum: ["pending", "approved", "rejected"],
+            default: "pending",
+        }
     },
     {
         timestamps: true,

@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import InfluencerModel from "../../models/influencerModel/influencerModel.mjs";
 import { AppError, catchAsync, sendSuccess } from "../../utils/handler.mjs";
 
+
+// influencer request start from here
 export const requestInfluencer = catchAsync(async (req, res, next) => {
     const { firstName, lastName, phone, email, gender, address, profilePicture } = req.body;
 
@@ -35,6 +37,10 @@ export const requestInfluencer = catchAsync(async (req, res, next) => {
     );
 });
 
+// influencer request ends here
+
+
+// get all influencer request start from here....
 export const getAllInfluencerRequest = catchAsync(async (req, res, next) => {
     let { page = 1, limit = 10 } = req.query;
     const { search } = req.query;
@@ -85,6 +91,8 @@ export const getAllInfluencerRequest = catchAsync(async (req, res, next) => {
     );
 });
 
+// get all influencer request ended here....
+
 // get single influencer details
 export const getSingleIncluencer = catchAsync(async (req, res, next) => {
     const { id } = req.params;
@@ -97,6 +105,8 @@ export const getSingleIncluencer = catchAsync(async (req, res, next) => {
     }
     return sendSuccess(res, "Influencer fetched successfully", influencer, 200, true);
 });
+
+// single influencer delete request
 export const deleteInfluencer = catchAsync(async (req, res, next) => {
     const { id } = req.params;
     const influencer = await InfluencerModel.findByIdAndDelete(id);
@@ -106,3 +116,29 @@ export const deleteInfluencer = catchAsync(async (req, res, next) => {
     return sendSuccess(res, "Influencer deleted successfully", {}, 200, true);
 })
 
+// single influencer delete request end...
+
+
+// Multiple influencer delete request start
+
+export const MultipleInfluencerDelete = catchAsync(async (req, res, next) => {
+    const { ids } = req.body;
+    const result = await InfluencerModel.deleteMany({ _id: { $in: ids } });
+    return sendSuccess(res, "Influencers deleted successfully", {}, 200, true);
+})
+
+// Multiple influencer delete request end
+
+export const approveRejectInfluencer = catchAsync(async (req, res, next) => {
+    const { id } = req?.query;
+    const status = req?.query?.status;
+    const influencer = await InfluencerModel.findById(id);
+    if (!influencer) {
+        return next(new AppError('Influencer not found', 404));
+    }
+    if (influencer.status === status) {
+        return next(new AppError('Status already updated', 400));
+    }
+    await InfluencerModel.findByIdAndUpdate(id, { status }, { new: true });
+    return sendSuccess(res, "Influencer status updated successfully", {}, 200, true);
+})
