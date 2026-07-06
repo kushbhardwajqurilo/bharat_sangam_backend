@@ -18,6 +18,7 @@ import subscriberRouter from "./src/routes/subscriber.route.mjs";
 import sponsorRouter from "./src/routes/sponsor.route.mjs";
 import calendarRouter from "./src/routes/calendar.route.mjs";
 import { personalMailMessage } from "./src/config/bravoConfig.mjs";
+import influencerRouter from "./src/routes/influencerRoutes/influencer.route.mjs";
 const app = express();
 
 /* ================= CORE SETTINGS ================= */
@@ -152,6 +153,7 @@ app.use(`${base}/subscriber`, subscriberRouter);
 app.use(`${base}/sponsor`, sponsorRouter);
 app.use(`${base}/sponsor`, sponsorRouter);
 app.use(`${base}/calender`, calendarRouter);
+app.use(`${base}/influencer`, influencerRouter);
 
 /* ================= 404 ================= */
 

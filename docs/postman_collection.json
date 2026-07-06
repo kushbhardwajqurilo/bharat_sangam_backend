@@ -14,7 +14,12 @@
     { "key": "venueId", "value": "" },
     { "key": "artistId", "value": "" },
     { "key": "eventId", "value": "" },
-    { "key": "ticketCode", "value": "" }
+    { "key": "ticketCode", "value": "" },
+    { "key": "calendarId", "value": "" },
+    { "key": "influencerId", "value": "" },
+    { "key": "bookingId", "value": "" },
+    { "key": "sponsorId", "value": "" },
+    { "key": "volunteerId", "value": "" }
   ],
   "item": [
     {
@@ -32,6 +37,20 @@
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/api-docs/openapi.json"
+          }
+        },
+        {
+          "name": "Test API Connection",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/test"
+          }
+        },
+        {
+          "name": "Ticket Preview Template",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/ticket"
           }
         }
       ]
@@ -68,6 +87,34 @@
           }
         },
         {
+          "name": "Forgot Password Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/admin/forgot-password"
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"NewStrongPass123\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/admin/reset-password"
+          }
+        },
+        {
           "name": "Get Cloudinary Signature",
           "request": {
             "method": "GET",
@@ -78,33 +125,130 @@
           }
         },
         {
-          "name": "Add Volunteer",
+          "name": "Delete Cloudinary Resource",
           "request": {
-            "method": "POST",
+            "method": "DELETE",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Volunteer One\",\n  \"email\": \"volunteer@example.com\"\n}"
-            },
-            "url": "{{baseUrl}}/api/v1/admin/add-volunteer"
+            "url": "{{baseUrl}}/api/v1/admin/presign-url"
           }
         },
         {
-          "name": "Login Volunteer",
+          "name": "Send Admin Email",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              { "key": "Content-Type", "value": "multipart/form-data" }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"volunteer@example.com\",\n  \"password\": \"Volunteer123\"\n}"
-            },
-            "url": "{{baseUrl}}/api/v1/admin/login-volunteer"
+            "url": "{{baseUrl}}/api/v1/admin/email"
           }
+        },
+        {
+          "name": "Dashboard Card Analytics",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/admin/dashboard/analytics"
+          }
+        },
+        {
+          "name": "Dashboard Booking Trend Chart",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/admin/dashboard/booking-trend"
+          }
+        },
+        {
+          "name": "Dashboard Booking Registration Trend Chart",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/admin/dashboard/booking-registration-trend"
+          }
+        },
+        {
+          "name": "Volunteers",
+          "item": [
+            {
+              "name": "Add Volunteer",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Volunteer One\",\n  \"email\": \"volunteer@example.com\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/admin/volunteer"
+              }
+            },
+            {
+              "name": "List Volunteers",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+                ],
+                "url": "{{baseUrl}}/api/v1/admin/volunteer?page=1&limit=10"
+              }
+            },
+            {
+              "name": "Get Single Volunteer",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+                ],
+                "url": "{{baseUrl}}/api/v1/admin/volunteer/{{volunteerId}}"
+              }
+            },
+            {
+              "name": "Update Volunteer",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Volunteer Updated\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/admin/volunteer/{{volunteerId}}"
+              }
+            },
+            {
+              "name": "Disable/Delete Volunteer",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+                ],
+                "url": "{{baseUrl}}/api/v1/admin/volunteer/{{volunteerId}}"
+              }
+            },
+            {
+              "name": "Login Volunteer",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"volunteer@example.com\",\n  \"password\": \"Volunteer123\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/admin/login-volunteer"
+              }
+            }
+          ]
         }
       ]
     },
@@ -133,7 +277,7 @@
             "header": [
               { "key": "Authorization", "value": "Bearer {{adminToken}}" }
             ],
-            "url": "{{baseUrl}}/api/v1/admin/getall-bookingtype?page=1&limit=10"
+            "url": "{{baseUrl}}/api/v1/admin/booking-type?page=1&limit=10"
           }
         },
         {
@@ -143,7 +287,7 @@
             "header": [
               { "key": "Authorization", "value": "Bearer {{adminToken}}" }
             ],
-            "url": "{{baseUrl}}/api/v1/admin/get-single-bookingtype?b_id={{bookingTypeId}}"
+            "url": "{{baseUrl}}/api/v1/admin/booking-type/{{bookingTypeId}}"
           }
         },
         {
@@ -168,7 +312,7 @@
             "header": [
               { "key": "Authorization", "value": "Bearer {{adminToken}}" }
             ],
-            "url": "{{baseUrl}}/api/v1/admin/booking-type?b_id={{bookingTypeId}}"
+            "url": "{{baseUrl}}/api/v1/admin/booking-type/{{bookingTypeId}}"
           }
         }
       ]
@@ -198,7 +342,7 @@
             "header": [
               { "key": "Authorization", "value": "Bearer {{adminToken}}" }
             ],
-            "url": "{{baseUrl}}/api/v1/admin/getAll-category?page=1&limit=10"
+            "url": "{{baseUrl}}/api/v1/admin/category?page=1&limit=10"
           }
         },
         {
@@ -208,7 +352,7 @@
             "header": [
               { "key": "Authorization", "value": "Bearer {{adminToken}}" }
             ],
-            "url": "{{baseUrl}}/api/v1/admin/getSingle-category/{{categoryId}}"
+            "url": "{{baseUrl}}/api/v1/admin/category/{{categoryId}}"
           }
         },
         {
@@ -223,7 +367,17 @@
               "mode": "raw",
               "raw": "{\n  \"categoryName\": \"Devotional Evening\",\n  \"picture\": \"https://example.com/category-updated.jpg\"\n}"
             },
-            "url": "{{baseUrl}}/api/v1/admin/add-category/{{categoryId}}"
+            "url": "{{baseUrl}}/api/v1/admin/category/{{categoryId}}"
+          }
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/admin/category/{{categoryId}}"
           }
         }
       ]
@@ -247,7 +401,17 @@
           }
         },
         {
-          "name": "Get Venue",
+          "name": "Get All Venue List",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/venue/all-venue"
+          }
+        },
+        {
+          "name": "Get Single Venue Details",
           "request": {
             "method": "GET",
             "header": [
@@ -269,6 +433,16 @@
               "raw": "{\n  \"address\": \"Ayodhya, Uttar Pradesh\"\n}"
             },
             "url": "{{baseUrl}}/api/v1/venue/{{venueId}}"
+          }
+        },
+        {
+          "name": "Get All Venue Volunteers",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/venue/all"
           }
         },
         {
@@ -308,17 +482,17 @@
             "header": [
               { "key": "Authorization", "value": "Bearer {{adminToken}}" }
             ],
-            "url": "{{baseUrl}}/api/v1/artist/all?page=1&limit=10"
+            "url": "{{baseUrl}}/api/v1/artist?page=1&limit=10"
           }
         },
         {
-          "name": "Get Artist",
+          "name": "Get Artist Details",
           "request": {
             "method": "GET",
             "header": [
               { "key": "Authorization", "value": "Bearer {{adminToken}}" }
             ],
-            "url": "{{baseUrl}}/api/v1/artist/single/{{artistId}}"
+            "url": "{{baseUrl}}/api/v1/artist/{{artistId}}"
           }
         },
         {
@@ -378,6 +552,49 @@
             "method": "GET",
             "url": "{{baseUrl}}/api/v1/event/latest-capacity"
           }
+        },
+        {
+          "name": "Get All Events",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/event/all-event"
+          }
+        },
+        {
+          "name": "Get Single Event",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/event/{{eventId}}"
+          }
+        },
+        {
+          "name": "Update Event",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventName\": \"Updated Bharat Sangam 2026\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/event/{{eventId}}"
+          }
+        },
+        {
+          "name": "Add Manual Attended Seats",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attendedCount\": 5\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/event/{{eventId}}/manual-attendance"
+          }
         }
       ]
     },
@@ -406,6 +623,20 @@
           }
         },
         {
+          "name": "Ticket Details By Phone",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/booking/details?phone=9876543210"
+          }
+        },
+        {
+          "name": "Get Non-Visited Users",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/booking/non-visited-users"
+          }
+        },
+        {
           "name": "Verify Ticket",
           "request": {
             "method": "PUT",
@@ -418,6 +649,26 @@
               "raw": "{\n  \"allow_user\": 2\n}"
             },
             "url": "{{baseUrl}}/api/v1/booking/ticket-verify?u_id={{ticketCode}}"
+          }
+        },
+        {
+          "name": "Get All Bookings",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/booking"
+          }
+        },
+        {
+          "name": "Get Single Booking Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/booking/{{bookingId}}"
           }
         }
       ]
@@ -440,6 +691,13 @@
           }
         },
         {
+          "name": "Get All Feedbacks",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/feedback"
+          }
+        },
+        {
           "name": "Submit Contact Query",
           "request": {
             "method": "POST",
@@ -454,6 +712,20 @@
           }
         },
         {
+          "name": "Get All Contact Queries",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/contact"
+          }
+        },
+        {
+          "name": "Get Single Contact Query",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/contact/{{bookingTypeId}}"
+          }
+        },
+        {
           "name": "Subscribe",
           "request": {
             "method": "POST",
@@ -465,6 +737,124 @@
               "raw": "{\n  \"email\": \"subscriber@gmail.com\"\n}"
             },
             "url": "{{baseUrl}}/api/v1/subscriber"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sponsors",
+      "item": [
+        {
+          "name": "Add Sponsor",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sponsorName\": \"Gold Sponsor Name\",\n  \"sponsorIcon\": \"https://example.com/logo.png\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/sponsor/add-sponsors"
+          }
+        },
+        {
+          "name": "Get All Sponsors",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/sponsor/get-all?page=1&limit=10&search="
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calendar",
+      "item": [
+        {
+          "name": "Add Calendar Entry",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"festival\": \"Diwali\",\n  \"date\": \"12\",\n  \"month\": \"November\",\n  \"day\": \"Thursday\",\n  \"image\": \"https://example.com/diwali.png\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/calender"
+          }
+        },
+        {
+          "name": "Get All Calendar Entries",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/calender?page=1&limit=10&search="
+          }
+        },
+        {
+          "name": "Get Single Festival Entry",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/calender/{{calendarId}}"
+          }
+        },
+        {
+          "name": "Update Calendar Entry",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"festival\": \"Diwali Updated\",\n  \"date\": \"13\",\n  \"month\": \"November\",\n  \"day\": \"Friday\",\n  \"image\": \"https://example.com/diwali-updated.png\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/calender/{{calendarId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Influencers",
+      "item": [
+        {
+          "name": "Request Influencer Registration",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"phone\": \"9876543210\",\n  \"email\": \"john.doe@example.com\",\n  \"gender\": \"male\",\n  \"address\": \"Delhi, India\",\n  \"profilePicture\": \"https://example.com/john.jpg\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/influencer"
+          }
+        },
+        {
+          "name": "Get All Influencer Requests",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/influencer?page=1&limit=10&search="
+          }
+        },
+        {
+          "name": "Get Single Influencer Details",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/influencer/{{influencerId}}"
           }
         }
       ]
