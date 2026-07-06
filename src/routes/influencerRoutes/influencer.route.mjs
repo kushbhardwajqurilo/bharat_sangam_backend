@@ -11,5 +11,5 @@ influencerRouter.get("/:id", AuthMiddleware, accessMiddleware("admin"), validate
 influencerRouter.delete("/:id", AuthMiddleware, accessMiddleware("admin"), validateParams(influencerParamsSchema), deleteInfluencer);
 influencerRouter.delete("/multiple", AuthMiddleware, accessMiddleware("admin"), validateInfluencerRequest(multipleInfluencerDeleteSchema), MultipleInfluencerDelete)
 
-influencerRouter.post('/status', AuthMiddleware, accessMiddleware("admin"), validateQuery(influencerStatusSchema), approveRejectInfluencer)
+influencerRouter.patch('/', AuthMiddleware, accessMiddleware("admin"), validateQuery(influencerStatusSchema), approveRejectInfluencer)
 export default influencerRouter; 
