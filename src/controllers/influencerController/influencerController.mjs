@@ -140,5 +140,6 @@ export const approveRejectInfluencer = catchAsync(async (req, res, next) => {
         return next(new AppError('Status already updated', 400));
     }
     await InfluencerModel.findByIdAndUpdate(id, { status }, { new: true });
+    // send email template //
     return sendSuccess(res, "Influencer status updated successfully", {}, 200, true);
 })
