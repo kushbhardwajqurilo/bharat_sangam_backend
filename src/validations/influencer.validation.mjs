@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { z } from "zod";
 
 export const influencerSchema = z.object({
@@ -53,4 +54,14 @@ export const influencerSchema = z.object({
                 .optional(),
         })
         .optional(),
+});
+
+export const getAllInfluencerRequestQuerySchema = z.object({
+    page: z.coerce.number().int().positive().default(1),
+    limit: z.coerce.number().int().min(1).max(25).positive().default(10),
+    search: z.string().trim().optional(),
+});
+
+export const influencerParamsSchema = z.object({
+    id: z.string().refine(mongoose.Types.ObjectId.isValid, "Invalid influencer ID")
 });

@@ -97,4 +97,12 @@ export const getSingleIncluencer = catchAsync(async (req, res, next) => {
     }
     return sendSuccess(res, "Influencer fetched successfully", influencer, 200, true);
 });
+export const deleteInfluencer = catchAsync(async (req, res, next) => {
+    const { id } = req.params;
+    const influencer = await InfluencerModel.findByIdAndDelete(id);
+    if (!influencer) {
+        return next(new AppError('Influencer not found', 404));
+    }
+    return sendSuccess(res, "Influencer deleted successfully", {}, 200, true);
+})
 
