@@ -62,8 +62,8 @@ export const getAllRequestQuerySchema = z.object({
     search: z.string().trim().optional(),
 });
 
-export const influencerParamsSchema = z.object({
-    id: z.string().refine(mongoose.Types.ObjectId.isValid, "Invalid influencer ID")
+export const ParamsSchema = z.object({
+    id: z.string().refine(mongoose.Types.ObjectId.isValid, "Invalid  ID")
 });
 export const multipleInfluencerDeleteSchema = z.object({
     ids: z
@@ -75,14 +75,14 @@ export const multipleInfluencerDeleteSchema = z.object({
                 }
             )
         )
-        .min(1, "At least one influencer ID is required")
+        .min(1, "At least one  ID is required")
         .max(100, "Maximum 100 IDs are allowed"),
 });
 
 // influencer status update request
 
-export const influencerStatusSchema = z.object({
-    id: z.string().trim().refine(mongoose.Types.ObjectId.isValid, "Invalid influencer ID"),
+export const StatusSchema = z.object({
+    id: z.string().trim().refine(mongoose.Types.ObjectId.isValid, "Invalid  ID"),
 
     status: z.string().trim().toLowerCase().min(1, "Status requrired").refine((value) => ["approved", "rejected"].includes(value), {
         message: "Invalid Status"

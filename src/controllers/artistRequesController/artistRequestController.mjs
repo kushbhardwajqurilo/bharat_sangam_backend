@@ -35,6 +35,7 @@ export const getAllArtistRequest = catchAsync(async (req, res, next) => {
 
     const [allRequest, total] = await Promise.all([
         ArtistRequestModel.find(query)
+            .select("-__v -updatedAt")
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
@@ -58,4 +59,29 @@ export const getAllArtistRequest = catchAsync(async (req, res, next) => {
         200,
         true
     );
+})
+
+export const getSingleArtistRequest = catchAsync(async (req, res, next) => {
+    const { id } = req.params;
+    const artistRequest = await ArtistRequestModel.findById(id).select("-__v -updatedAt");
+    if (!artistRequest) {
+        return next(new AppError('Artist request not found', 404));
+    }
+    return sendSuccess(res, "Artist request fetched successfully", artistRequest, 200, true);
+});
+
+
+export const approveRejectArtistRequest = catchAsync(async (req, res, next) => {
+    const { id } = req?.query;
+    const status = req?.query?.status;
+    const artist = await ArtistRequestModel.findById(id);
+    if (!artist) {
+        return next(new AppError('Artist not found', 404));
+    }
+    if (artist.status === status) {
+        return next(new AppError('Status already updated', 400));
+    }
+    await ArtistRequestModel.findByIdAndUpdate(id, { status }, { new: true });
+    // send email template //
+    return sendSuccess(res, "Artist status updated successfully", {}, 200, true);
 })
