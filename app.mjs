@@ -124,6 +124,10 @@ app.get("/api-docs/openapi.json", (req, res) => {
   res.sendFile(path.join(__dirname, "docs", "openapi.json"));
 });
 
+app.get("/design", (req, res) => {
+  res.sendFile(path.join(__dirname, "design.html"));
+});
+
 app.get("/api-docs/postman-collection.json", (req, res) => {
   res.sendFile(path.join(__dirname, "docs", "postman_collection.json"));
 });

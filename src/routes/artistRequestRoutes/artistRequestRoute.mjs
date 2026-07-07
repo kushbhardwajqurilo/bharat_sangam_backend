@@ -10,5 +10,5 @@ const artistRequestRouter = express.Router();
 artistRequestRouter.post('/', requestSubmissionLimiter, validateRequest(artistRequestSchema), artistRequest);
 artistRequestRouter.get('/', AuthMiddleware, accessMiddleware("admin"), validateQuery(getAllRequestQuerySchema), getAllArtistRequest);
 artistRequestRouter.get('/:id', AuthMiddleware, accessMiddleware("admin"), validateParams(ParamsSchema), getSingleArtistRequest);
-artistRequestRouter.patch('/:id', AuthMiddleware, accessMiddleware("admin"), validateParams(ParamsSchema), validateQuery(StatusSchema), approveRejectArtistRequest);
+artistRequestRouter.patch('/', AuthMiddleware, accessMiddleware("admin"), validateQuery(StatusSchema), approveRejectArtistRequest);
 export default artistRequestRouter;

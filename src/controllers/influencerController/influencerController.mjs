@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import InfluencerModel from "../../models/influencerModel/influencerModel.mjs";
 import { AppError, catchAsync, sendSuccess } from "../../utils/handler.mjs";
+import { influencerStatusMail } from "../../config/bravoConfig.mjs";
 
 
 // influencer request start from here
@@ -141,5 +142,6 @@ export const approveRejectInfluencer = catchAsync(async (req, res, next) => {
     }
     await InfluencerModel.findByIdAndUpdate(id, { status }, { new: true });
     // send email template //
+    await influencerStatusMail(influencer.firstName + " " + influencer.lastName, influencer.email, status);
     return sendSuccess(res, "Influencer status updated successfully", {}, 200, true);
 })

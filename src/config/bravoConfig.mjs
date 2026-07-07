@@ -135,3 +135,29 @@ export const personalMailMessage = async (
     return false;
   }
 };
+
+export const influencerStatusMail = async (
+  name, email, status
+) => {
+  try {
+    const payload = {
+      sender: {
+        email: process.env.INFO_EMAIL,
+        name: "Bharat Bhakti Sangam",
+      },
+      to: [{ email }],
+      templateId: status === "approved" ? 11 : 10,
+      params: {
+        influencerName: name,
+        year: new Date().getFullYear()
+      },
+    };
+
+    const res = await tranEmailApi.sendTransacEmail(payload);
+
+    return !!res.messageId?.trim();
+  } catch (error) {
+    console.error("❌ Email error:", error.response?.body || error);
+    return false;
+  }
+};
