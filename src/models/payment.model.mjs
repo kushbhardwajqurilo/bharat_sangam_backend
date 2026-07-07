@@ -5,8 +5,6 @@ const paymentSchema = new mongoose.Schema(
     orderId: {
       type: String,
       required: true,
-      unique: true,
-      index: true,
     },
     eventId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -16,7 +14,6 @@ const paymentSchema = new mongoose.Schema(
     paymentId: {
       type: String,
       default: null,
-      index: true,
     },
 
     amount: {
@@ -70,6 +67,12 @@ paymentSchema.index(
   { paymentId: 1 },
   { unique: true, partialFilterExpression: { paymentId: { $type: "string" } } },
 );
+paymentSchema.index({ eventId: 1 });
+paymentSchema.index({ bookingId: 1 });
+paymentSchema.index({ phone: 1 });
+paymentSchema.index({ email: 1 });
+paymentSchema.index({ status: 1 });
+paymentSchema.index({ createdAt: -1 });
 const Payment = mongoose.model("Payment", paymentSchema);
 
 export default Payment;
