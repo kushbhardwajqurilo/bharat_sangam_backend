@@ -54,6 +54,12 @@ export const influencerSchema = z.object({
                 .optional(),
         })
         .optional(),
+
+    socialLinks: z.object({
+        instagram: z.string().trim().url("Invalid Url").optional(),
+        facebook: z.string().trim().url("Invalid Url").optional(),
+        youtube: z.string().trim().url("Invalid Url").optional()
+    }).optional()
 });
 
 export const getAllRequestQuerySchema = z.object({

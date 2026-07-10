@@ -176,5 +176,4 @@ app.use((req, res) => {
 /* ================= ERROR ================= */
 
 app.use(errorHandle);
-
 export default app;

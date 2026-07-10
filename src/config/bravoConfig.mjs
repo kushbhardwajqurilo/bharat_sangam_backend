@@ -146,7 +146,7 @@ export const influencerStatusMail = async (
         name: "Bharat Bhakti Sangam",
       },
       to: [{ email }],
-      templateId: status === "approved" ? 11 : 10,
+      templateId: status === "approved" ? 11 : 12,
       params: {
         influencerName: name,
         year: new Date().getFullYear()

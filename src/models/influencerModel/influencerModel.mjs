@@ -65,6 +65,25 @@ const influencerSchema = new mongoose.Schema(
             type: String,
             enum: ["pending", "approved", "rejected"],
             default: "pending",
+        },
+        socialLinks: {
+            instagram: {
+                type: String,
+                trim: true,
+                default: "N/A"
+            },
+
+            facebook: {
+                type: String,
+                trim: true,
+                default: "N/A"
+            },
+
+            youtube: {
+                type: String,
+                trim: true,
+                default: "N/A"
+            }
         }
     },
     {

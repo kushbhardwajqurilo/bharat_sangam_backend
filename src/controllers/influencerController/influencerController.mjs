@@ -66,7 +66,7 @@ export const getAllInfluencerRequest = catchAsync(async (req, res, next) => {
     }
 
     const [allRequest, total] = await Promise.all([
-        InfluencerModel.find(query)
+        InfluencerModel.find(query).select("-__v -updatedAt")
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
