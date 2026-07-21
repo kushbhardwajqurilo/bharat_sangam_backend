@@ -3,6 +3,7 @@ import {
   addManualAttended,
   createEvent,
   getAllEvents,
+  getAllPreviousEvents,
   getLatestEvent,
   getSingleEvent,
   latestEventCapacity,
@@ -15,6 +16,7 @@ import {
 const eventRouter = express.Router();
 eventRouter.post("/", createEvent);
 eventRouter.get("/latest", getLatestEvent);
+eventRouter.get("/previous", getAllPreviousEvents);
 eventRouter.get("/latest-capacity", latestEventCapacity);
 eventRouter.get("/all-event", getAllEvents);
 eventRouter.get("/:id", getSingleEvent);

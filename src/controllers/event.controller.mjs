@@ -37,7 +37,7 @@ export const createEvent = catchAsync(async (req, res, next) => {
       !bookingTypes ||
       !eventCategories ||
       !eventDescription,
-    !ogImage)
+      !ogImage)
   ) {
     return next(new AppError("Required fields missing", 400));
   }
@@ -706,6 +706,96 @@ export const getLatestEvent = catchAsync(async (req, res, next) => {
   delete event[0].endTime;
   return sendSuccess(res, "Event fetched successfully", event[0], 200, true);
 });
+
+// Previous all Event;
+export const getAllPreviousEvents = catchAsync(async (req, res, next) => {
+  let { page = 1, limit = 10 } = req.query;
+  page = parseInt(page);
+  limit = parseInt(limit);
+
+  page = page > 0 ? page : 1;
+  limit = limit > 0 && limit <= 100 ? limit : 10;
+
+  const skip = (page - 1) * limit;
+
+  const to12Hour = (time) => {
+    let [h, m] = time.split(":");
+    h = Number(h);
+    const ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    return `${h} : ${m} ${ampm}`;
+  }
+  const event = await eventModel.aggregate([
+    { $sort: { createdAt: -1 } }, // Latest event first
+    { $skip: 1 },                 // Skip the latest event
+
+    {
+      $lookup: {
+        from: "venues",
+        localField: "venueName",
+        foreignField: "_id",
+        as: "venueName"
+      }
+    },
+    { $unwind: "$venueName" },
+
+    {
+      $lookup: {
+        from: "artists",
+        localField: "artists",
+        foreignField: "_id",
+        as: "artists"
+      }
+    },
+
+    {
+      $project: {
+        _id: 1,
+        eventName: 1,
+        description: 1,
+        date: 1,
+        startTime: 1,
+        endTime: 1,
+        tabs: 1,
+        hashTags: 1,
+        bookedSeats: 1,
+        maxSeats: 1,
+        availableTickets: 1,
+        eventBanner: 1,
+        homeBanner: 1,
+        ogImage: 1,
+        artists: 1,
+        venueName: {
+          venue: "$venueName.venue",
+          address: "$venueName.address",
+          _id: "$venueName._id"
+        }
+      }
+    }
+  ]);
+  if (!event || !event.length) {
+    return next(new AppError("Events not found", 400))
+  }
+
+  const total = event?.length;
+  const paginatedEvents = event.slice(skip, skip + limit);
+
+  return sendSuccess(
+    res,
+    "success",
+    {
+      events: paginatedEvents,
+      pagination: {
+        total: total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    },
+    200,
+    true,
+  );
+})
 
 //
 
