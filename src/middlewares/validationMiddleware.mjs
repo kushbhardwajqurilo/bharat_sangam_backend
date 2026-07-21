@@ -64,4 +64,14 @@ export const validateQuery = (schema, property = "query") => {
     };
 };
 
+// HIGHLIGHTS MIDDLEWARE
+export const highlightRequest = (schema) => {
+    return async (req, res, next) => {
+        const result = await schema.safeParseAsync(req.body);
+        if (!result.success) {
+            return
+        }
+    }
+}
+
 
