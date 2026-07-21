@@ -1,0 +1,13 @@
+import express from "express";
+import { accessMiddleware, AuthMiddleware } from "../../middlewares/authMiddleware.mjs";
+import { getTestimonialUploadSignature } from "../../utils/videoUploader.mjs";
+import { addTestimonialRequest, deleteSingleTestimonial, getAllTestimonials } from "../../controllers/testimonialController/testimonial.controller.mjs";
+import { validateParams, validateRequest } from "../../middlewares/validationMiddleware.mjs";
+import { highlightsSchema } from "../../validations/highlightAndTestimonial.validation.mjs";
+import { ParamsSchema } from "../../validations/influencer.validation.mjs";
+const testimonialRouter = express.Router();
+testimonialRouter.get('/upload-signature', AuthMiddleware, accessMiddleware("admin"), getTestimonialUploadSignature);
+testimonialRouter.post("/", AuthMiddleware, accessMiddleware("admin"), validateRequest(highlightsSchema), addTestimonialRequest);
+testimonialRouter.delete("/:id", AuthMiddleware, accessMiddleware("admin"), validateParams(ParamsSchema), deleteSingleTestimonial);
+testimonialRouter.get('/', getAllTestimonials);
+export default testimonialRouter;

@@ -22,6 +22,7 @@ import influencerRouter from "./src/routes/influencerRoutes/influencer.route.mjs
 import artistRequestRouter from "./src/routes/artistRequestRoutes/artistRequestRoute.mjs";
 import paymentRouter from "./src/routes/payment.route.mjs";
 import highlightsRouter from "./src/routes/highlightsRoutes/highlightsRoutes.mjs";
+import testimonialRouter from "./src/routes/testimonialRoutes/testimonial.route.mjs";
 const app = express();
 
 /* ================= CORE SETTINGS ================= */
@@ -164,6 +165,7 @@ app.use(`${base}/influencer`, influencerRouter);
 app.use(`${base}/artistrequest`, artistRequestRouter);
 app.use(`${base}/payment`, paymentRouter);
 app.use(`${base}/highlight`, highlightsRouter);
+app.use(`${base}/testimonial`, testimonialRouter);
 
 /* ================= 404 ================= */
 

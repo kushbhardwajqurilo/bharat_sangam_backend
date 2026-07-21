@@ -1,7 +1,7 @@
 import express from "express";
 import { getVideoUploadSignature } from "../../utils/videoUploader.mjs";
 import { addHighlight, deleteSingleHighlight, getAllHighlights } from "../../controllers/highlightsController/highlight.controller.mjs";
-import { highlightsSchema } from "../../validations/highlight.validation.mjs";
+import { highlightsSchema } from "../../validations/highlightAndTestimonial.validation.mjs";
 import { validateParams, validateRequest } from "../../middlewares/validationMiddleware.mjs";
 import { ParamsSchema } from "../../validations/influencer.validation.mjs";
 import { accessMiddleware, AuthMiddleware } from "../../middlewares/authMiddleware.mjs";
