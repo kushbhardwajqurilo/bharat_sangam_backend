@@ -103,11 +103,11 @@ export const createTicket = catchAsync(async (req, res, next) => {
   const { username, email, eventId, totalTicket, phone } = req.body;
 
   console.log("🟢 STEP 1: API HIT");
-  if (totalTicket > 5) {
-    return next(
-      new AppError("You have exceeded the maximum ticket limit.", 400),
-    );
-  }
+  // if (totalTicket > 5) {
+  //   return next(
+  //     new AppError("You have exceeded the maximum ticket limit.", 400),
+  //   );
+  // }
 
   const isAlreadyBooked = await bookingModel
     .findOne({ eventId: eventId, phone: phone })
