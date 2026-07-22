@@ -184,7 +184,7 @@ export const artistRequestMail = async (name, email) => {
 }
 
 // artist request approve or reject email send
-export const atristStatusMail = async (name, email, status) => {
+export const artistStatusMail = async (name, email, status) => {
   try {
     const payload = {
       sender: {
