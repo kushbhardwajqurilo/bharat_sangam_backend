@@ -161,3 +161,47 @@ export const influencerStatusMail = async (
     return false;
   }
 };
+
+export const artistRequestMail = async (name, email) => {
+  try {
+    const payload = {
+      sender: {
+        email: process.env.INFO_EMAIL,
+        name: process.env.EMAIL_NAME
+      },
+      to: [{ email }],
+      templateId: 13,
+      params: {
+        name,
+        year: new Date().getFullYear()
+      },
+    }
+    const res = await tranEmailApi.sendTransacEmail(payload);
+    return !!res.messageId?.trim();
+  } catch (error) {
+    return false;
+  }
+}
+
+// artist request approve or reject email send
+export const atristStatusMail = async (name, email, status) => {
+  try {
+    const payload = {
+      sender: {
+        email: process.env.INFO_EMAIL,
+        name: process.env.EMAIL_NAME
+      },
+      to: [{ email }],
+      templateId: status === "approved" ? 16 : 17,
+      params: {
+        name,
+        year: new Date().getFullYear()
+      }
+    }
+    const res = await tranEmailApi.sendTransacEmail(payload);
+    return !!res.messageId?.trim();
+  } catch (error) {
+    console.error("❌ Email error:", error.response?.body || error);
+    return false;
+  }
+}
