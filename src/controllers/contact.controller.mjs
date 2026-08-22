@@ -3,7 +3,7 @@ import { AppError, catchAsync, sendSuccess } from "../utils/handler.mjs";
 
 // query add
 export const contactController = catchAsync(async (req, res, next) => {
-  const requiredFields = ["fullName", "email", "phone", "query"];
+  const requiredFields = ["fullName", "email", "phone", "query", "subject"];
   const missingField = requiredFields.find(
     (field) => !req.body || req.body.toString().trim().length === "",
   );
@@ -11,7 +11,7 @@ export const contactController = catchAsync(async (req, res, next) => {
   if (missingField) {
     return next(new AppError(`${missingField} missing`));
   }
-  const { fullName, email, phone, query } = req.body;
+  const { fullName, email, phone, query, subject } = req.body;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     return next(new AppError("Invalid Email Format", 400));
@@ -21,6 +21,7 @@ export const contactController = catchAsync(async (req, res, next) => {
     email: email.toLowerCase().trim(),
     phone: phone.toLowerCase().trim(),
     query: query.toLowerCase().trim(),
+    subject: subject.toLowerCase().trim(),
   };
   const result = await contactModel.create(payload);
   if (!result) {

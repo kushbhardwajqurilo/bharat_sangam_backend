@@ -37,7 +37,7 @@ export const createEvent = catchAsync(async (req, res, next) => {
       !bookingTypes ||
       !eventCategories ||
       !eventDescription,
-      !ogImage)
+    !ogImage)
   ) {
     return next(new AppError("Required fields missing", 400));
   }
@@ -678,6 +678,7 @@ export const getLatestEvent = catchAsync(async (req, res, next) => {
             in: {
               name: "$$type.bookingType",
               price: "$$type.price",
+              _id: "$$type._id",
             },
           },
         },
@@ -702,8 +703,8 @@ export const getLatestEvent = catchAsync(async (req, res, next) => {
     return next(new AppError("Event not found", 404));
   }
   event[0].time = `${to12Hour(event[0].startTime)} To ${to12Hour(event[0].endTime)}`;
-  delete event[0].startTime;
-  delete event[0].endTime;
+  // delete event[0].startTime;
+  // delete event[0].endTime;
   return sendSuccess(res, "Event fetched successfully", event[0], 200, true);
 });
 
@@ -724,18 +725,18 @@ export const getAllPreviousEvents = catchAsync(async (req, res, next) => {
     const ampm = h >= 12 ? "PM" : "AM";
     h = h % 12 || 12;
     return `${h} : ${m} ${ampm}`;
-  }
+  };
   const event = await eventModel.aggregate([
     { $sort: { createdAt: -1 } }, // Latest event first
-    { $skip: 1 },                 // Skip the latest event
+    { $skip: 1 }, // Skip the latest event
 
     {
       $lookup: {
         from: "venues",
         localField: "venueName",
         foreignField: "_id",
-        as: "venueName"
-      }
+        as: "venueName",
+      },
     },
     { $unwind: "$venueName" },
 
@@ -744,8 +745,8 @@ export const getAllPreviousEvents = catchAsync(async (req, res, next) => {
         from: "artists",
         localField: "artists",
         foreignField: "_id",
-        as: "artists"
-      }
+        as: "artists",
+      },
     },
 
     {
@@ -768,13 +769,13 @@ export const getAllPreviousEvents = catchAsync(async (req, res, next) => {
         venueName: {
           venue: "$venueName.venue",
           address: "$venueName.address",
-          _id: "$venueName._id"
-        }
-      }
-    }
+          _id: "$venueName._id",
+        },
+      },
+    },
   ]);
   if (!event || !event.length) {
-    return next(new AppError("Events not found", 400))
+    return next(new AppError("Events not found", 400));
   }
 
   const total = event?.length;
@@ -795,7 +796,7 @@ export const getAllPreviousEvents = catchAsync(async (req, res, next) => {
     200,
     true,
   );
-})
+});
 
 //
 

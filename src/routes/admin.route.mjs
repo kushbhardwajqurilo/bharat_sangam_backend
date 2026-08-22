@@ -53,8 +53,8 @@ adminRouter.post("/login", adminLogin);
 // presign url request route
 adminRouter.get(
   "/presign-url",
-  AuthMiddleware,
-  accessMiddleware("admin"),
+  // AuthMiddleware,
+  // accessMiddleware("admin"),
   getSignature,
 );
 adminRouter.delete(
