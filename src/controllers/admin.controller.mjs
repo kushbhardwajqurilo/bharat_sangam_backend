@@ -475,8 +475,15 @@ export const addBookingType = catchAsync(async (req, res, next) => {
     return next(new AppError("Admin authentication failed", 401));
   }
 
-  let { bookingType, price } = req.body;
+  let {
+    bookingType,
+    price,
+    subtitle = "General Entry",
+    isPopular = false,
+    features = [],
+  } = req.body;
 
+  console.log("booking type body", req.body);
   // 🔹 Validation
   if (!bookingType?.trim()) {
     return next(new AppError("Booking type is required", 400));
@@ -506,8 +513,13 @@ export const addBookingType = catchAsync(async (req, res, next) => {
   const result = await bookingTypemodel.create({
     bookingType,
     price: Number(price),
+    subtitle,
+    isPopular,
+    features,
   });
-
+  if (!result) {
+    return next(new AppError("Failed to add bookin type", 400));
+  }
   return sendSuccess(res, "Booking type added successfully", {}, 201, true);
 });
 
@@ -519,7 +531,7 @@ export const updateBookingType = catchAsync(async (req, res, next) => {
   }
 
   const { id } = req.params;
-  let { bookingType, price } = req.body;
+  let { bookingType, price, subtitle, isPopular, features } = req.body;
 
   // 🔹 Validate ID
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -558,6 +570,9 @@ export const updateBookingType = catchAsync(async (req, res, next) => {
     {
       bookingType,
       price: Number(price),
+      subtitle,
+      isPopular,
+      features,
     },
     { new: true, runValidators: true },
   );
@@ -572,17 +587,20 @@ export const updateBookingType = catchAsync(async (req, res, next) => {
 // booking type soft delete
 export const deleteBookingType = catchAsync(async (req, res, next) => {
   const adminId = req.admin_id;
-
   if (!adminId || !mongoose.Types.ObjectId.isValid(adminId)) {
     return next(new AppError("Admin authentication failed", 401));
   }
+  const { isDelete } = req.body;
   const { id } = req.params;
   if (!id) {
     return next(new AppError("booking credential missing", 400));
   }
+  if (isDelete === "" || isDelete === null || isDelete === undefined) {
+    return next(new AppError("Status required", 400));
+  }
   const result = await bookingTypemodel.findByIdAndUpdate(
     { _id: id },
-    { isDelete: true },
+    { isDelete },
     { upsert: true, new: true },
   );
   if (!result) {
@@ -606,8 +624,8 @@ export const getAllBookingTypes = catchAsync(async (req, res, next) => {
 
   // Fetch data
   const result = await bookingTypemodel
-    .find({ isDelete: false })
-    .select("bookingType price")
+    .find({})
+    .select("-createdAt -updatedAt -__v")
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
