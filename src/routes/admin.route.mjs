@@ -3,7 +3,6 @@ import multer from "multer";
 import {
   addBookingType,
   addCategoryController,
-  addVenueController,
   addVolunteer,
   adminLogin,
   adminRegister,
@@ -12,7 +11,6 @@ import {
   forgetPassword,
   getAllBookingTypes,
   getAllCategoryController,
-  getAllVanueList,
   getAllVolunteerController,
   getSingleBookingType,
   getSingleCategoryController,
@@ -25,7 +23,6 @@ import {
   updateCategoryController,
   updateVolunteer,
 } from "../controllers/admin.controller.mjs";
-import { logoutAdmin } from "../controllers/admin.controller.mjs";
 
 import {
   deleteFromClodinary,
@@ -34,7 +31,6 @@ import {
 import {
   accessMiddleware,
   AuthMiddleware,
-  forgotPasswordMiddleware,
 } from "../middlewares/authMiddleware.mjs";
 import {
   dahsboardCardAnalytics,

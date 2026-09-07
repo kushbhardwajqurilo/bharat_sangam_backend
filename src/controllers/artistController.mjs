@@ -1,4 +1,4 @@
-import mongoose, { mongo } from "mongoose";
+import mongoose from "mongoose";
 import artistModel from "../models/artistMode.js";
 import { AppError, catchAsync, sendSuccess } from "../utils/handler.mjs";
 
@@ -38,7 +38,7 @@ export const addArtistController = catchAsync(async (req, res, next) => {
   }
 
   // 🔹 Email format check
-  const emailRegex = /^\S+@\S+\.\S+$/;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     return next(new AppError("Invalid email format", 400));
   }
@@ -62,7 +62,9 @@ export const addArtistController = catchAsync(async (req, res, next) => {
     galleryImages,
     role,
   });
-
+  if (!artist) {
+    return next(new AppError("Unable to add artist", 400));
+  }
   return sendSuccess(res, "Artist added successfully", {}, 201, true);
 });
 
