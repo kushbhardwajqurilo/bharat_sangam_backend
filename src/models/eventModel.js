@@ -52,7 +52,7 @@ const eventSchema = new mongoose.Schema(
     bookingType: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "booking",
+        ref: "bokkingType",
         required: [true, "Booking type is required"],
       },
     ],

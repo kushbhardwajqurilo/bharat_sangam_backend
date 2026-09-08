@@ -6,8 +6,12 @@ async function connectDB() {
     return;
   }
 
+  const dbUri = process.env.NODE_ENV === "production"
+    ? process.env.DB_URI
+    : (process.env.TEST_DB_URI || process.env.DB_URI);
+
   try {
-    const conn = await mongoose.connect(process.env.TEST_DB_URI, {
+    const conn = await mongoose.connect(dbUri, {
       serverSelectionTimeoutMS: 10000,
       maxPoolSize: 10,
     });

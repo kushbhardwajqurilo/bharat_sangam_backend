@@ -1,93 +1,58 @@
 import cron from "node-cron";
-import bookingReserveModel from "../models/bookingReserveModel.mjs";
-import mongoose from "mongoose";
+import BookingReservation from "../models/bookingReserveModel.mjs";
 import eventModel from "../models/eventModel.js";
+import mongoose from "mongoose";
 
-// export async function releaseExpiredReservations() {
-//   const session = await mongoose.startSession();
+/**
+ * Periodically release expired unpaid reservations back to event capacity
+ */
+export const releaseExpiredReservations = async () => {
+  try {
+    const expiredReservations = await BookingReservation.find({
+      status: "reserved",
+      expiresAt: { $lte: new Date() },
+    }).limit(100);
 
-//   try {
-//     await session.withTransaction(async () => {
-//       const expiredReservations = await bookingReserveModel
-//         .find({
-//           status: "reserved",
-//           expiresAt: { $lte: new Date() },
-//         })
-//         .limit(100)
-//         .session(session);
+    if (!expiredReservations.length) {
+      return;
+    }
 
-//       for (const reservation of expiredReservations) {
-//         const updated = await bookingReserveModel.updateOne(
-//           { _id: reservation._id, status: "reserved" },
-//           { $set: { status: "expired" } },
-//           { session },
-//         );
+    console.log(`⏱️ Releasing ${expiredReservations.length} expired reservations...`);
 
-//         if (updated.modifiedCount !== 1) continue;
+    for (const reservation of expiredReservations) {
+      // Mark expired
+      const updated = await BookingReservation.updateOne(
+        { _id: reservation._id, status: "reserved" },
+        { $set: { status: "expired" } },
+      );
 
-//         await eventModel.updateOne(
-//           { _id: reservation.eventId },
-//           {
-//             $inc: {
-//               availableTickets: reservation.totalTicket,
-//               bookedSeats: -reservation.totalTicket,
-//             },
-//           },
-//           { session },
-//         );
-//       }
-//     });
-//   } finally {
-//     await session.endSession();
-//   }
-// }
+      // If successfully updated, return seats atomically to event
+      if (updated.modifiedCount === 1) {
+        await eventModel.updateOne(
+          { _id: reservation.eventId },
+          {
+            $inc: {
+              availableTickets: reservation.totalTicket,
+              bookedSeats: -reservation.totalTicket,
+            },
+          },
+        );
+        console.log(
+          `✅ Returned ${reservation.totalTicket} seats for event ${reservation.eventId} (Reservation ${reservation._id})`,
+        );
+      }
+    }
+  } catch (error) {
+    console.error("❌ Error releasing expired reservations:", error);
+  }
+};
 
 const startCronJobs = () => {
+  // Run every minute
   cron.schedule("* * * * *", async () => {
-    console.log(" Cron running", new Date());
-
-    try {
-      const session = await mongoose.startSession();
-
-      try {
-        await session.withTransaction(async () => {
-          const expiredReservations = await bookingReserveModel
-            .find({
-              status: "reserved",
-              expiresAt: { $lte: new Date() },
-            })
-            .limit(100)
-            .session(session);
-          for (const reservation of expiredReservations) {
-            const updated = await bookingReserveModel.updateOne(
-              { _id: reservation._id, status: "reserved" },
-              { $set: { status: "expired" } },
-              { session },
-            );
-
-            if (updated.modifiedCount !== 1) continue;
-
-            await eventModel.updateOne(
-              { _id: reservation.eventId },
-              {
-                $inc: {
-                  availableTickets: reservation.totalTicket,
-                  bookedSeats: -reservation.totalTicket,
-                },
-              },
-              { session },
-            );
-          }
-        });
-      } finally {
-        await session.endSession();
-      }
-
-      console.log("✅ Cron completed");
-    } catch (error) {
-      console.error("❌ Cron Error:", error);
-    }
+    await releaseExpiredReservations();
   });
+  console.log("⏰ Reservation expiration cron job scheduled (every minute)");
 };
 
 export default startCronJobs;

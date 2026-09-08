@@ -3,6 +3,7 @@ import {
   getAllPaymentDetails,
   getSinglePaymentDetails,
 } from "../controllers/paymnet.controller.mjs";
+import { handleRazorpayWebhook } from "../controllers/paymentWebhook.controller.mjs";
 import {
   AuthMiddleware,
   accessMiddleware,
@@ -18,18 +19,28 @@ import {
 
 const paymentRouter = express.Router();
 
-paymentRouter.use(AuthMiddleware, accessMiddleware("admin"));
+/**
+ * Public Webhook Endpoint (No JWT auth, signature verified in handler)
+ */
+paymentRouter.post("/webhook", handleRazorpayWebhook);
 
+/**
+ * Admin Protected Payment Lookups
+ */
 paymentRouter.get(
   "/",
+  AuthMiddleware,
+  accessMiddleware("admin"),
   validateQuery(getPaymentsQuerySchema),
-  getAllPaymentDetails
+  getAllPaymentDetails,
 );
 
 paymentRouter.get(
   "/:id",
+  AuthMiddleware,
+  accessMiddleware("admin"),
   validateParams(getPaymentByIdSchema),
-  getSinglePaymentDetails
+  getSinglePaymentDetails,
 );
 
 export default paymentRouter;

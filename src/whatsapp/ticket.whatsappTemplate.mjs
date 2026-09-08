@@ -20,6 +20,11 @@ async function sendWhatsAppTemplate({
     mediaUrl,
     filename,
   });
+  console.log({
+    apiUrl: process.env.WHATSAPP_TICKET_TEMPLATE_API_URL,
+    templateName: process.env.WHATSAPP_TICKET_TEMPLATE_NAME,
+    hasKey: Boolean(process.env.WHATSAPP_TICKET_KEY),
+  });
   try {
     const response = await fetch(
       `${process.env.WHATSAPP_TICKET_TEMPLATE_API_URL}`,
@@ -63,9 +68,9 @@ async function sendWhatsAppTemplate({
     const data = await response.json();
 
     if (!response.ok) {
+
       throw new Error(JSON.stringify(data));
     }
-
     console.log("Message Sent:", data);
     const message = data?.messages?.[0];
     if (message) {
@@ -85,7 +90,7 @@ async function sendWhatsAppTemplate({
     }
     return data;
   } catch (error) {
-    console.error("❌ Error:", error.message);
+    console.error("❌ Error:", error);
     throw error;
   }
 }

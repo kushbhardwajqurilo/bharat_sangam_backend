@@ -239,11 +239,15 @@ import sendWhatsAppTemplate from "../whatsapp/ticket.whatsappTemplate.mjs";
 import uploadBufferToCloudinary from "../utils/uploadBufferInCloudinary.mjs";
 dotenv.config();
 
+const dbUri = process.env.NODE_ENV === "production"
+  ? process.env.DB_URI
+  : (process.env.TEST_DB_URI || process.env.DB_URI);
+
 console.log("🚀 Worker file loaded...");
-await mongoose.connect(process.env.DB_URI, {
+await mongoose.connect(dbUri, {
   serverSelectionTimeoutMS: 30000,
 });
-console.log("worker db connected");
+console.log("worker db connected to:", dbUri.split("@").pop() || "MongoDB");
 
 let browser;
 
@@ -259,12 +263,12 @@ function formatWhatsAppNumber(phone) {
 const worker = new Worker(
   "ticketQueue",
   async (job) => {
-    console.log("ticket data", job.data);
+    // console.log("ticket data", job.data);
     console.log("📦 JOB RECEIVED:", job.id);
     const { ticketId, email, u_id, allowVisitors, username, phone } = job.data;
 
     // ── 1. Fetch ticket data ──────────────────────────────────────────────────
-    const genTicket = await bookingModel.aggregate([
+    let genTicket = await bookingModel.aggregate([
       { $match: { _id: new mongoose.Types.ObjectId(ticketId) } },
 
       // Event details
@@ -288,13 +292,13 @@ const worker = new Worker(
           as: "eventDetails",
         },
       },
-      { $unwind: "$eventDetails" },
+      { $unwind: { path: "$eventDetails", preserveNullAndEmptyArrays: true } },
 
       // Artist details
       {
         $lookup: {
           from: "artists",
-          let: { artistIds: "$eventDetails.artists" },
+          let: { artistIds: { $ifNull: ["$eventDetails.artists", []] } },
           pipeline: [
             { $match: { $expr: { $in: ["$_id", "$$artistIds"] } } },
             {
@@ -319,7 +323,7 @@ const worker = new Worker(
       },
       { $unwind: { path: "$venueDetails", preserveNullAndEmptyArrays: true } },
 
-      // ✅ FIX 1: project `phone` from the booking document itself
+      // Project phone from booking
       {
         $addFields: {
           bookingPhone: "$phone",
@@ -327,19 +331,21 @@ const worker = new Worker(
       },
     ]);
 
-    const to12Hour = (time) => {
-      let [h, m] = time.split(":");
-      h = Number(h);
+    let finalTicket = genTicket[0];
 
-      const ampm = h >= 12 ? "PM" : "AM";
-      h = h % 12 || 12;
-
-      return `${h}:${m} ${ampm}`;
-    };
-    const finalTicket = genTicket[0];
-
+    // Fallback: If aggregate failed, query bookingModel directly
     if (!finalTicket) {
-      throw new Error(`No booking found for ticketId: ${ticketId}`);
+      const rawBooking = await bookingModel.findById(ticketId).lean();
+      if (!rawBooking) {
+        throw new Error(`No booking found in database for ticketId: ${ticketId}`);
+      }
+      finalTicket = {
+        ...rawBooking,
+        bookingPhone: rawBooking.phone,
+        eventDetails: {},
+        artistDetails: [],
+        venueDetails: {},
+      };
     }
     const getBase64 = async (url) => {
       const res = await fetch(url);
@@ -368,27 +374,40 @@ const worker = new Worker(
       });
     };
 
+    const to12Hour = (time) => {
+      if (!time || typeof time !== "string" || !time.includes(":")) return time || "TBD";
+      let [h, m] = time.split(":");
+      h = Number(h);
+      const ampm = h >= 12 ? "PM" : "AM";
+      h = h % 12 || 12;
+      return `${h}:${m} ${ampm}`;
+    };
+
     // ── 2. Build HTML & screenshot ────────────────────────────────────────────
     const logoUrl = logoBase64;
     const qr = await QRCode.toDataURL(u_id);
-    const date = new Date(finalTicket?.eventDetails?.date);
+    const date = finalTicket?.eventDetails?.date
+      ? new Date(finalTicket.eventDetails.date)
+      : new Date();
     const formatted = date.toLocaleDateString("en-IN");
 
     const html = generateTicketHTML({
       name: username,
       logo: logoUrl,
-      eventName: finalTicket?.eventDetails?.eventName,
-      poster: finalTicket?.venueDetails?.image,
-      time: `${to12Hour(finalTicket?.eventDetails?.startTime)} To ${to12Hour(finalTicket?.eventDetails?.endTime)}`,
+      eventName: finalTicket?.eventDetails?.eventName || "Bharat Bhakti Sangam",
+      poster: finalTicket?.venueDetails?.image || "",
+      time: finalTicket?.eventDetails?.startTime
+        ? `${to12Hour(finalTicket?.eventDetails?.startTime)} To ${to12Hour(finalTicket?.eventDetails?.endTime)}`
+        : "Event Time",
       qr,
       u_id,
       visitors: allowVisitors,
-      artistImage: finalTicket?.artistDetails?.[0]?.profileImage,
-      artistName: finalTicket?.artistDetails?.[0]?.artistName,
-      artistDesc: finalTicket?.artistDetails?.[0]?.about,
-      location: finalTicket?.venueDetails?.venue,
+      artistImage: finalTicket?.artistDetails?.[0]?.profileImage || "",
+      artistName: finalTicket?.artistDetails?.[0]?.artistName || "",
+      artistDesc: finalTicket?.artistDetails?.[0]?.about || "",
+      location: finalTicket?.venueDetails?.venue || "",
       date: formatDate(date),
-      venue: finalTicket?.venueDetails?.address,
+      venue: finalTicket?.venueDetails?.address || "Venue Details",
     });
 
     if (!browser) {
@@ -438,8 +457,8 @@ const worker = new Worker(
       phone ?? finalTicket?.bookingPhone,
     );
 
-    console.log("📱 WhatsApp recipient:", whatsappRecipient);
-    console.log("🖼️  Media URL:", uploadImage.secure_url);
+    // console.log("📱 WhatsApp recipient:", whatsappRecipient);
+    // console.log("🖼️  Media URL:", uploadImage.secure_url);
 
     if (!whatsappRecipient) {
       console.warn(`⚠️ WhatsApp skipped: no phone found for ticket ${u_id}`);
@@ -480,6 +499,6 @@ worker.on("ready", () => console.log("✅ Worker is ready and listening..."));
 worker.on("active", (job) => console.log("⚡ Job active:", job.id));
 worker.on("completed", (job) => console.log("✅ Job completed:", job.id));
 worker.on("failed", (job, err) =>
-  console.error("❌ Job failed:", job.id, err.message),
+  console.error("❌ Job failed:", job.id, err),
 );
 worker.on("error", (err) => console.error("❌ Worker error:", err));
