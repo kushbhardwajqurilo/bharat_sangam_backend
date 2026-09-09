@@ -1,259 +1,198 @@
 import mongoose from "mongoose";
 import artistModel from "../models/artistMode.js";
 import { AppError, catchAsync, sendSuccess } from "../utils/handler.mjs";
+import { artistRequestMail, artistStatusMail } from "../config/bravoConfig.mjs";
+import jwt from "jsonwebtoken";
 
+// Helper function to verify admin token optionally for public/admin dual endpoints
+async function verifyAdmin(authHeader) {
+  if (!authHeader) return false;
+  if (!authHeader.startsWith("Bearer ")) return false;
+  const token = authHeader.split(" ")[1];
+  if (!token) return false;
+  try {
+    const decoded = jwt.verify(token, process.env.ACCESS_SECRET);
+    return decoded?.role === "admin";
+  } catch (error) {
+    return false;
+  }
+}
+
+// 1. POST /artist (Public or Admin Creation)
 export const addArtistController = catchAsync(async (req, res, next) => {
-  console.log("artist body", req.body);
-  const {
+  let {
     artistName,
-    profileImage,
+    firstName,
+    lastName,
+    role,
     aboutArtist,
+    about,
+    profileImage,
+    profilePicture,
     email,
     contactNo,
-    startTime,
-    endTime,
-    instruments,
-    galleryImages,
-    role,
+    phone,
+    gender = "other",
+    address = {},
+    socialLinks = {},
+    instruments = [],
+    startTime = "",
+    endTime = "",
+    galleryImages = [],
+    status,
+    isActive = true,
   } = req.body;
-  // 🔹 Basic validation
+
+  // Backwards compatibility mappings
+  if (!artistName && (firstName || lastName)) {
+    artistName = `${firstName || ""} ${lastName || ""}`.trim();
+  }
+  if (!contactNo && phone) {
+    contactNo = phone;
+  }
+  if (!profileImage && profilePicture) {
+    profileImage = profilePicture;
+  }
+  if (!aboutArtist && about) {
+    aboutArtist = about;
+  }
+
+  // Fallback defaults / checks
   if (!artistName?.trim()) {
     return next(new AppError("artistName is required", 400));
   }
-
+  if (!role?.trim()) {
+    role = "Artist";
+  }
+  if (!aboutArtist?.trim()) {
+    aboutArtist = "Artist bio";
+  }
+  if (!profileImage?.trim()) {
+    profileImage = "_blank.png";
+  }
   if (!email?.trim()) {
     return next(new AppError("email is required", 400));
   }
-
   if (!contactNo?.trim()) {
     return next(new AppError("contactNo is required", 400));
   }
 
-  if (!Array.isArray(instruments) || instruments.length === 0) {
-    return next(new AppError("instruments must be a non-empty array", 400));
-  }
-
-  if (!Array.isArray(galleryImages) || galleryImages.length === 0) {
-    return next(new AppError("gallery must be a non-empty array", 400));
-  }
-
-  // 🔹 Email format check
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    return next(new AppError("Invalid email format", 400));
-  }
-
-  // 🔹 Duplicate check
-  const existingArtist = await artistModel.findOne({ email });
-  if (existingArtist) {
-    return next(new AppError("Artist with this email already exists", 400));
-  }
-
-  // 🔹 Create artist
-  const artist = await artistModel.create({
-    artistName,
-    profileImage,
-    about: aboutArtist,
-    email,
-    contactNo,
-    startTime,
-    endTime,
-    instruments,
-    galleryImages,
-    role,
+  // Check duplicate artist by email or contactNo
+  const existingArtist = await artistModel.findOne({
+    $or: [{ email: email.toLowerCase().trim() }, { contactNo: contactNo.trim() }],
   });
-  if (!artist) {
-    return next(new AppError("Unable to add artist", 400));
+  if (existingArtist) {
+    return next(new AppError("Artist with this email or contact number already exists", 409));
   }
-  return sendSuccess(res, "Artist added successfully", {}, 201, true);
-});
 
-// <-------- update artist controller --------->
-export const updateArtistController = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
+  // Determine status: if explicitly passed or admin caller, honor/default accordingly
+  const isAdmin = await verifyAdmin(req.headers["authorization"]);
+  const finalStatus = status ? status : isAdmin ? "approved" : "pending";
 
-  const {
-    artistName,
-    profileImage,
-    aboutArtist,
-    email,
-    contactNo,
+  const artist = await artistModel.create({
+    artistName: artistName.trim(),
+    role: role.trim(),
+    aboutArtist: aboutArtist.trim(),
+    profileImage: profileImage.trim(),
+    email: email.toLowerCase().trim(),
+    contactNo: contactNo.trim(),
+    gender,
+    address,
+    socialLinks,
+    instruments,
     startTime,
     endTime,
-    // performanceTime,
-    instruments,
     galleryImages,
-    role,
-    isActive = true,
-  } = req.body;
-  console.log("artist update request body", req.body);
-  const about = aboutArtist;
-  // 🔹 Check artist exists
-  const artist = await artistModel.findById(id);
+    status: finalStatus,
+    isActive,
+  });
+
   if (!artist) {
-    return next(new AppError("Artist not found", 404));
+    return next(new AppError("Failed to create artist request", 400));
   }
 
-  // 🔹 Email validation (if updating)
-  if (email) {
-    const emailRegex = /^\S+@\S+\.\S+$/;
-    if (!emailRegex.test(email)) {
-      return next(new AppError("Invalid email format", 400));
+  // Trigger transactional email
+  try {
+    if (finalStatus === "pending") {
+      await artistRequestMail(artist.artistName, artist.email);
+    } else {
+      await artistStatusMail(artist.artistName, artist.email, finalStatus);
     }
-
-    // 🔹 Duplicate email check (exclude current artist)
-    const existingArtist = await artistModel.findOne({
-      email,
-      _id: { $ne: id },
-    });
-
-    if (existingArtist) {
-      return next(new AppError("Email already in use", 400));
-    }
+  } catch (err) {
+    console.error("Artist email notification failed:", err);
   }
-
-  // 🔹 Array validations (optional but safe)
-  if (
-    instruments &&
-    (!Array.isArray(instruments) || instruments.length === 0)
-  ) {
-    return next(new AppError("instruments must be a non-empty array", 400));
-  }
-
-  if (
-    galleryImages &&
-    (!Array.isArray(galleryImages) || galleryImages.length === 0)
-  ) {
-    return next(new AppError("gallery must be a non-empty array", 400));
-  }
-
-  // 🔹 Update only provided fields
-  const updatedArtist = await artistModel.findByIdAndUpdate(
-    id,
-    {
-      ...(artistName && { artistName }),
-      ...(profileImage && { profileImage }),
-      ...(about && { about }),
-      ...(email && { email }),
-      ...(startTime && { startTime }),
-      ...(endTime && { endTime }),
-      ...(contactNo && { contactNo }),
-      ...(instruments && { instruments }),
-      ...(galleryImages && { galleryImages }),
-      ...(role && { role }),
-    },
-    { new: true, runValidators: true },
-  );
 
   return sendSuccess(
     res,
-    "Artist updated successfully",
-    updatedArtist,
-    200,
+    finalStatus === "approved"
+      ? "Artist added successfully"
+      : "Artist request submitted successfully",
+    artist,
+    201,
     true,
   );
 });
 
-// get single artis details
-export const getArtistDetails = catchAsync(async (req, res, next) => {
-  const adminId = req.admin_id;
-
-  if (!adminId || !mongoose.Types.ObjectId.isValid(adminId)) {
-    return next(new AppError("Admin authentication failed", 401));
-  }
-
-  const { id } = req.params;
-
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return next(new AppError("Invalid artist ID", 400));
-  }
-
-  const result = await artistModel
-    .findOne({ _id: id, isActive: true })
-    .select("-__v") // remove unwanted fields
-    .lean(); // performance boost
-  if (!result) {
-    return next(new AppError("Artist not found", 404));
-  }
-  const finalData = {
-    _id: result?._id,
-    artistName: result?.artistName,
-    profileImage: result?.profileImage,
-    aboutArtist: result?.about,
-    email: result?.email,
-    contactNo: result?.contactNo,
-    startTime: result?.startTime,
-    endTime: result?.endTime,
-    instruments: result?.instruments,
-    galleryImages: result?.galleryImages,
-    role: result?.role,
-  };
-  return sendSuccess(res, "success", finalData, 200, true);
-});
-
+// 2. GET /artist (Admin Listing with filters & pagination)
 export const getAllArtistList = catchAsync(async (req, res, next) => {
-  const adminId = req.admin_id;
+  const {
+    page = 1,
+    limit = 10,
+    search,
+    status = "all",
+    sortBy = "createdAt",
+    order = "desc",
+  } = req.query;
 
-  // 🔹 Auth check (if admin-only API)
-  if (!adminId || !mongoose.Types.ObjectId.isValid(adminId)) {
-    return next(new AppError("Admin authentication failed", 401));
+  const pageNum = parseInt(page) || 1;
+  const limitNum = parseInt(limit) || 10;
+  const skip = (pageNum - 1) * limitNum;
+
+  const query = {};
+
+  // Status filtering
+  if (status && status !== "all") {
+    query.status = status;
   }
 
-  // 🔹 Query params
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const search = req.query.search || "";
+  // Search filter
+  if (search && search.trim() !== "") {
+    const searchRegex = { $regex: search.trim(), $options: "i" };
+    query.$or = [
+      { artistName: searchRegex },
+      { email: searchRegex },
+      { contactNo: searchRegex },
+      { role: searchRegex },
+      { "address.city": searchRegex },
+      { "address.state": searchRegex },
+    ];
+  }
 
-  const skip = (page - 1) * limit;
+  // Sort criteria
+  const sortDirection = order === "asc" || order === "1" ? 1 : -1;
+  const sortOption = { [sortBy]: sortDirection };
 
-  // 🔹 Search filter
-  const searchFilter = search
-    ? {
-        artistName: { $regex: search, $options: "i" },
-      }
-    : {};
-
-  // 🔹 Main query
-  const filter = {
-    isActive: true,
-    ...searchFilter,
-  };
-  const to12Hour = (time) => {
-    let [h, m] = time.split(":");
-    h = Number(h);
-
-    const ampm = h >= 12 ? "PM" : "AM";
-    h = h % 12 || 12;
-
-    return `${h}:${m} ${ampm}`;
-  };
-  const artists = await artistModel
-    .find(filter)
-    .select(
-      "artistName  email contactNo profileImage about startTime endTime instruments galleryImages role",
-    )
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit)
-    .lean();
-  const finalData = artists.map(({ about, startTime, endTime, ...rest }) => ({
-    ...rest,
-    aboutArtist: about,
-    startTime: to12Hour(startTime),
-    endTime: to12Hour(endTime),
-  }));
-  const total = await artistModel.countDocuments(filter);
+  const [artists, total] = await Promise.all([
+    artistModel
+      .find(query)
+      .select("-__v")
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limitNum)
+      .lean(),
+    artistModel.countDocuments(query),
+  ]);
 
   return sendSuccess(
     res,
-    "Artist list fetched successfully",
+    "Artists fetched successfully",
     {
-      data: finalData,
+      data: artists,
       pagination: {
-        limit,
         total,
-        page,
-        totalPages: Math.ceil(total / limit),
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum) || 1,
       },
     },
     200,
@@ -261,32 +200,159 @@ export const getAllArtistList = catchAsync(async (req, res, next) => {
   );
 });
 
-// delete but not permanently
-export const deleteArtistController = catchAsync(async (req, res, next) => {
-  const adminId = req.admin_id;
-
-  // 🔹 Auth check
-  if (!adminId || !mongoose.Types.ObjectId.isValid(adminId)) {
-    return next(new AppError("Admin authentication failed", 401));
-  }
-
+// 3. GET /artist/:id (Single Artist Fetch)
+export const getArtistDetails = catchAsync(async (req, res, next) => {
   const { id } = req.params;
 
-  // 🔹 Validate artist ID
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return next(new AppError("Invalid artist ID", 400));
   }
 
-  // 🔹 Soft delete
-  const result = await artistModel.findOneAndUpdate(
-    { _id: id, isActive: true },
-    { isActive: false },
-    { new: true },
-  );
+  const artist = await artistModel.findById(id).select("-__v").lean();
+  if (!artist) {
+    return next(new AppError("Artist not found", 404));
+  }
 
-  if (!result) {
-    return next(new AppError("Artist not found or already deleted", 404));
+  return sendSuccess(res, "Artist fetched successfully", artist, 200, true);
+});
+
+// 4. PATCH /artist/:id/status or PATCH /artist (Approve / Reject Status Update)
+export const updateArtistStatusController = catchAsync(async (req, res, next) => {
+  const id = req.params.id || req.query.id || req.body.id;
+  const status = req.body.status || req.query.status;
+
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return next(new AppError("Invalid or missing artist ID", 400));
+  }
+
+  if (!["pending", "approved", "rejected"].includes(status)) {
+    return next(new AppError("Status must be 'pending', 'approved', or 'rejected'", 400));
+  }
+
+  const artist = await artistModel.findById(id);
+  if (!artist) {
+    return next(new AppError("Artist not found", 404));
+  }
+
+  if (artist.status === status) {
+    return sendSuccess(res, "Artist request updated successfully", artist, 200, true);
+  }
+
+  artist.status = status;
+  await artist.save();
+
+  // Trigger status email notification
+  try {
+    await artistStatusMail(artist.artistName, artist.email, status);
+  } catch (err) {
+    console.error("Artist status email send error:", err);
+  }
+
+  return sendSuccess(
+    res,
+    "Artist request updated successfully",
+    artist,
+    200,
+    true,
+  );
+});
+
+// 5. PUT /artist/:id (Admin Update Artist Record)
+export const updateArtistController = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return next(new AppError("Invalid artist ID", 400));
+  }
+
+  const artist = await artistModel.findById(id);
+  if (!artist) {
+    return next(new AppError("Artist not found", 404));
+  }
+
+  const {
+    artistName,
+    role,
+    aboutArtist,
+    about,
+    profileImage,
+    profilePicture,
+    email,
+    contactNo,
+    phone,
+    gender,
+    address,
+    socialLinks,
+    instruments,
+    startTime,
+    endTime,
+    galleryImages,
+    status,
+    isActive,
+  } = req.body;
+
+  // Check email uniqueness if modified
+  if (email && email.toLowerCase().trim() !== artist.email) {
+    const existing = await artistModel.findOne({
+      email: email.toLowerCase().trim(),
+      _id: { $ne: id },
+    });
+    if (existing) {
+      return next(new AppError("Email already in use by another artist", 409));
+    }
+    artist.email = email.toLowerCase().trim();
+  }
+
+  // Check contactNo uniqueness if modified
+  const newContact = contactNo || phone;
+  if (newContact && newContact.trim() !== artist.contactNo) {
+    const existing = await artistModel.findOne({
+      contactNo: newContact.trim(),
+      _id: { $ne: id },
+    });
+    if (existing) {
+      return next(new AppError("Contact number already in use by another artist", 409));
+    }
+    artist.contactNo = newContact.trim();
+  }
+
+  if (artistName) artist.artistName = artistName.trim();
+  if (role) artist.role = role.trim();
+  if (aboutArtist || about) artist.aboutArtist = (aboutArtist || about).trim();
+  if (profileImage || profilePicture) artist.profileImage = (profileImage || profilePicture).trim();
+  if (gender) artist.gender = gender;
+  if (address) artist.address = { ...artist.address, ...address };
+  if (socialLinks) artist.socialLinks = { ...artist.socialLinks, ...socialLinks };
+  if (Array.isArray(instruments)) artist.instruments = instruments;
+  if (startTime !== undefined) artist.startTime = startTime;
+  if (endTime !== undefined) artist.endTime = endTime;
+  if (Array.isArray(galleryImages)) artist.galleryImages = galleryImages;
+  if (status) artist.status = status;
+  if (isActive !== undefined) artist.isActive = isActive;
+
+  await artist.save();
+
+  return sendSuccess(res, "Artist updated successfully", artist, 200, true);
+});
+
+// 6. DELETE /artist/:id (Delete Artist Record)
+export const deleteArtistController = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return next(new AppError("Invalid artist ID", 400));
+  }
+
+  const artist = await artistModel.findByIdAndDelete(id);
+  if (!artist) {
+    return next(new AppError("Artist not found", 404));
   }
 
   return sendSuccess(res, "Artist deleted successfully", {}, 200, true);
 });
+
+// Backward compatibility alias exports for any legacy consumers
+export const artistRequest = addArtistController;
+export const getAllArtistRequest = getAllArtistList;
+export const getSingleArtistRequest = getArtistDetails;
+export const approveRejectArtistRequest = updateArtistStatusController;

@@ -200,12 +200,24 @@ export const getAllEvents = catchAsync(async (req, res, next) => {
     },
     { $unwind: "$venueName" },
 
-    //  Artists
+    //  Artists (Only Approved & Active)
     {
       $lookup: {
         from: "artists",
-        localField: "artists",
-        foreignField: "_id",
+        let: { artistIds: { $ifNull: ["$artists", []] } },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $in: ["$_id", "$$artistIds"] },
+                  { $eq: ["$status", "approved"] },
+                  { $eq: ["$isActive", true] },
+                ],
+              },
+            },
+          },
+        ],
         as: "artists",
       },
     },
@@ -305,7 +317,7 @@ export const getAllEvents = catchAsync(async (req, res, next) => {
             in: {
               name: "$$artist.artistName",
               image: "$$artist.profileImage",
-              about: "$$artist.about",
+              about: { $ifNull: ["$$artist.aboutArtist", "$$artist.about"] },
             },
           },
         },
@@ -361,12 +373,24 @@ export const getSingleEvent = catchAsync(async (req, res, next) => {
     },
     { $unwind: "$venueName" },
 
-    //  Artists
+    //  Artists (Only Approved & Active)
     {
       $lookup: {
         from: "artists",
-        localField: "artists",
-        foreignField: "_id",
+        let: { artistIds: { $ifNull: ["$artists", []] } },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $in: ["$_id", "$$artistIds"] },
+                  { $eq: ["$status", "approved"] },
+                  { $eq: ["$isActive", true] },
+                ],
+              },
+            },
+          },
+        ],
         as: "artists",
       },
     },
@@ -465,7 +489,7 @@ export const getSingleEvent = catchAsync(async (req, res, next) => {
             in: {
               name: "$$artist.artistName",
               image: "$$artist.profileImage",
-              about: "$$artist.about",
+              about: { $ifNull: ["$$artist.aboutArtist", "$$artist.about"] },
             },
           },
         },
@@ -624,12 +648,24 @@ export const getLatestEvent = catchAsync(async (req, res, next) => {
     },
     { $unwind: "$venueName" },
 
-    //  Artists populate
+    //  Artists populate (Only Approved & Active)
     {
       $lookup: {
         from: "artists",
-        localField: "artists",
-        foreignField: "_id",
+        let: { artistIds: { $ifNull: ["$artists", []] } },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $in: ["$_id", "$$artistIds"] },
+                  { $eq: ["$status", "approved"] },
+                  { $eq: ["$isActive", true] },
+                ],
+              },
+            },
+          },
+        ],
         as: "artists",
       },
     },
@@ -694,7 +730,7 @@ export const getLatestEvent = catchAsync(async (req, res, next) => {
             in: {
               name: "$$artist.artistName",
               profileImage: "$$artist.profileImage",
-              about: "$$artist.about",
+              about: { $ifNull: ["$$artist.aboutArtist", "$$artist.about"] },
               galleryImages: "$$artist.galleryImages",
             },
           },
@@ -746,8 +782,20 @@ export const getAllPreviousEvents = catchAsync(async (req, res, next) => {
     {
       $lookup: {
         from: "artists",
-        localField: "artists",
-        foreignField: "_id",
+        let: { artistIds: { $ifNull: ["$artists", []] } },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $in: ["$_id", "$$artistIds"] },
+                  { $eq: ["$status", "approved"] },
+                  { $eq: ["$isActive", true] },
+                ],
+              },
+            },
+          },
+        ],
         as: "artists",
       },
     },

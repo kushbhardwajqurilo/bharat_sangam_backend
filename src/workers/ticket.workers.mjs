@@ -300,9 +300,23 @@ const worker = new Worker(
           from: "artists",
           let: { artistIds: { $ifNull: ["$eventDetails.artists", []] } },
           pipeline: [
-            { $match: { $expr: { $in: ["$_id", "$$artistIds"] } } },
             {
-              $project: { artistName: 1, profileImage: 1, about: 1 },
+              $match: {
+                $expr: {
+                  $and: [
+                    { $in: ["$_id", "$$artistIds"] },
+                    { $eq: ["$status", "approved"] },
+                    { $eq: ["$isActive", true] },
+                  ],
+                },
+              },
+            },
+            {
+              $project: {
+                artistName: 1,
+                profileImage: 1,
+                about: { $ifNull: ["$aboutArtist", "$about"] },
+              },
             },
           ],
           as: "artistDetails",

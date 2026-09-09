@@ -1,52 +1,57 @@
 import express from "express";
 import {
-  validateRequest,
-  validateQuery,
-  validateParams,
-} from "../../middlewares/validationMiddleware.mjs";
-import { artistRequestSchema } from "../../validations/artist.validation.mjs";
+  addArtistController,
+  getAllArtistList,
+  getArtistDetails,
+  updateArtistStatusController,
+} from "../../controllers/artistController.mjs";
 import {
-  approveRejectArtistRequest,
-  artistRequest,
-  getAllArtistRequest,
-  getSingleArtistRequest,
-} from "../../controllers/artistRequesController/artistRequestController.mjs";
-import { getAllRequestQuerySchema } from "../../validations/influencer.validation.mjs";
-import {
-  AuthMiddleware,
   accessMiddleware,
+  AuthMiddleware,
 } from "../../middlewares/authMiddleware.mjs";
-import { requestSubmissionLimiter } from "../../middlewares/rateLimitMiddleware.mjs";
 import {
-  ParamsSchema,
-  StatusSchema,
-} from "../../validations/influencer.validation.mjs";
+  validateParams,
+  validateQuery,
+  validateRequest,
+} from "../../middlewares/validationMiddleware.mjs";
+import {
+  artistCreateSchema,
+  artistParamsSchema,
+  artistQuerySchema,
+} from "../../validations/artist.validation.mjs";
+import { requestSubmissionLimiter } from "../../middlewares/rateLimitMiddleware.mjs";
+
 const artistRequestRouter = express.Router();
+
+// Forward legacy /artistrequest endpoints to the unified Artist controller
 artistRequestRouter.post(
   "/",
   requestSubmissionLimiter,
-  validateRequest(artistRequestSchema),
-  artistRequest,
+  validateRequest(artistCreateSchema),
+  addArtistController,
 );
+
 artistRequestRouter.get(
   "/",
   AuthMiddleware,
   accessMiddleware("admin"),
-  validateQuery(getAllRequestQuerySchema),
-  getAllArtistRequest,
+  validateQuery(artistQuerySchema),
+  getAllArtistList,
 );
+
 artistRequestRouter.get(
   "/:id",
   AuthMiddleware,
   accessMiddleware("admin"),
-  validateParams(ParamsSchema),
-  getSingleArtistRequest,
+  validateParams(artistParamsSchema),
+  getArtistDetails,
 );
+
 artistRequestRouter.patch(
   "/",
   AuthMiddleware,
   accessMiddleware("admin"),
-  validateQuery(StatusSchema),
-  approveRejectArtistRequest,
+  updateArtistStatusController,
 );
+
 export default artistRequestRouter;
