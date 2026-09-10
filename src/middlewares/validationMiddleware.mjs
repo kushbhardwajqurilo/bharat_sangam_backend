@@ -1,7 +1,7 @@
 export const validateRequest = (schema) => {
   return async (req, res, next) => {
     const result = await schema.safeParseAsync(req.body);
-
+    console.log("validate", result.data);
     if (!result.success) {
       return res.status(400).json({
         success: false,

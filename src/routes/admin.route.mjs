@@ -27,6 +27,7 @@ import {
 import {
   deleteFromClodinary,
   getSignature,
+  getVideoUploadSignature,
 } from "../controllers/cloudinary.controller.mjs";
 import {
   accessMiddleware,
@@ -49,9 +50,15 @@ adminRouter.post("/login", adminLogin);
 // presign url request route
 adminRouter.get(
   "/presign-url",
-  // AuthMiddleware,
-  // accessMiddleware("admin"),
+  AuthMiddleware,
+  accessMiddleware("admin"),
   getSignature,
+);
+adminRouter.get(
+  "/presign-url/video",
+  AuthMiddleware,
+  accessMiddleware("admin"),
+  getVideoUploadSignature,
 );
 adminRouter.delete(
   "/presign-url",

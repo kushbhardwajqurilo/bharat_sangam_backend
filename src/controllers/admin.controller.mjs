@@ -15,6 +15,8 @@ import {
   personalMailMessage,
   volunteerEmailSend,
 } from "../config/bravoConfig.mjs";
+import statusVideosModel from "../models/statusVideosModel.js";
+import cloudinaryConfig from "../config/cloudinary.mjs";
 
 // ================= TOKEN FUNCTIONS =================
 
@@ -1344,3 +1346,189 @@ export const resetPassword = catchAsync(async (req, res, next) => {
     return next(new AppError("Invalid Or Malformed Session", 402));
   }
 });
+
+/**
+ *  video upload service start here
+ **/
+
+//save in db
+export const addStatusVideo = catchAsync(async (req, res, next) => {
+  const { tags, thumbnailUrl, videoUrl } = req.body;
+  const insert = await statusVideosModel.create({
+    tags,
+    thumbnailUrl,
+    videoUrl,
+  });
+  if (!insert) {
+    return next(new AppError("unable to insert", 400));
+  }
+  return sendSuccess(res, "status upload", {}, 200, true);
+});
+
+export const getStatusVideo = catchAsync(async (req, res, next) => {
+  const { page = 1, limit = 10, search, tag, sortBy, order } = req.query;
+  console.log({ page, limit, search, tag, sortBy, order });
+  const skip = (page - 1) * limit;
+
+  const filter = {};
+
+  // Exact tag match
+  if (tag) {
+    filter.tags = tag;
+  }
+
+  // Search inside tags
+  if (search) {
+    filter.tags = {
+      $elemMatch: {
+        $regex: escapeRegex(search),
+        $options: "i",
+      },
+    };
+  }
+  const sortDirection = order === "asc" ? 1 : -1;
+
+  let sort;
+
+  switch (sortBy) {
+    case "oldest":
+      sort = {
+        createdAt: 1,
+        _id: 1,
+      };
+      break;
+
+    case "downloads":
+      sort = {
+        downloadCount: sortDirection,
+        _id: sortDirection,
+      };
+      break;
+
+    case "popular":
+      sort = {
+        downloadCount: sortDirection,
+        createdAt: -1,
+        _id: -1,
+      };
+      break;
+
+    case "latest":
+    default:
+      sort = {
+        createdAt: -1,
+        _id: -1,
+      };
+      break;
+  }
+
+  const [videos, total] = await Promise.all([
+    statusVideosModel
+      .find(filter)
+      .select(
+        "_id tags videoUrl thumbnailUrl downloadsCount createdAt updatedAt",
+      )
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+
+    statusVideosModel.countDocuments(filter),
+  ]);
+
+  const totalPages = Math.ceil(total / limit);
+
+  return sendSuccess(
+    res,
+    "Status videos fetched successfully",
+    {
+      data: videos,
+
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        totalPages,
+      },
+    },
+    200,
+    true,
+  );
+});
+
+export const getSingleStatusVideoDetails = catchAsync(
+  async (req, res, next) => {
+    const { id } = req.params;
+    const result = await statusVideosModel.findOne({ _id: id }).select("-__v");
+    if (!result) {
+      return next(new AppError("Status video not found.", 400));
+    }
+    return sendSuccess(res, "Video found.", result, 200, true);
+  },
+);
+
+export const updateStatusVideoDetails = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const { tags, videoUrl, thumbnailUrl } = req.body;
+
+  // Build update object
+  const updateData = {};
+
+  if (tags !== undefined) updateData.tags = tags;
+  if (videoUrl !== undefined) updateData.videoUrl = videoUrl;
+  if (thumbnailUrl !== undefined) {
+    updateData.thumbnailUrl = thumbnailUrl;
+  }
+
+  // Nothing to update
+  if (Object.keys(updateData).length === 0) {
+    return next(new AppError("No fields provided for update", 400));
+  }
+  const result = await statusVideosModel.updateOne(
+    { _id: id },
+    { $set: updateData },
+    { runValidators: true },
+  );
+  console.log("updated", result);
+  // Document doesn't exist
+  if (result.matchedCount === 0) {
+    return next(new AppError("Status video not found", 404));
+  }
+
+  return sendSuccess(res, "Status video updated successfully", {}, 200, true);
+});
+
+export const statusVideoDelete = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const resource = await statusVideosModel
+    .findOne({ _id: id })
+    .select("_id videoUrl")
+    .lean();
+  if (!resource) {
+    return next(new AppError("source not found.", 400));
+  }
+  const public_id = `uploads${resource.videoUrl.split("uploads")[1].split(".")[0]}`;
+
+  const result = await cloudinaryConfig.uploader.destroy(public_id, {
+    resource_type: "video",
+    invalidate: true,
+  });
+  if (result?.result !== "ok") {
+    return next(new AppError(`failed to delete file: ${result.result}`, 400));
+  }
+  await statusVideosModel.deleteOne({ _id: id });
+  return sendSuccess(res, "status delete successfully", {}, 201, true);
+});
+
+export const statusDownloadCount = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const result = await statusVideosModel.findOneAndUpdate(
+    { _id: id },
+    { $inc: { downloadsCount: 1 } },
+    { new: true },
+  );
+  return sendSuccess(res, "success", {}, 201, true);
+});
+/**
+ *  video upload service end here
+ **/

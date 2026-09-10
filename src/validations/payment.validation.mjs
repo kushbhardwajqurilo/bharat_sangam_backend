@@ -9,12 +9,12 @@ export const getPaymentsQuerySchema = z.object({
     .string()
     .optional()
     .default("1")
-    .transform((val) => Math.max(1, parseInt(val, 10) || 1)),
+    .transform((val) => Math.max(1, Number.parseInt(val, 10) || 1)),
   limit: z
     .string()
     .optional()
     .default("10")
-    .transform((val) => Math.max(1, parseInt(val, 10) || 10)),
+    .transform((val) => Math.max(1, Number.parseInt(val, 10) || 10)),
   eventId: z
     .string()
     .regex(/^[0-9a-fA-F]{24}$/, "Invalid event ID format")
@@ -23,12 +23,14 @@ export const getPaymentsQuerySchema = z.object({
     .string()
     .regex(/^[0-9a-fA-F]{24}$/, "Invalid booking ID format")
     .optional(),
-  status: z.enum(["created", "attempted", "paid", "failed", "refunded"]).optional(),
-  email: z.string().trim().toLowerCase().email("Invalid email format").optional(),
+  status: z
+    .enum(["created", "attempted", "paid", "failed", "refunded"])
+    .optional(),
+  email: z.email("Invalid email format").optional(),
   phone: z
     .string()
     .regex(/^\d+$/, "Invalid phone number format")
-    .transform((val) => Number(val))
+    .transform(Number)
     .optional(),
   search: z.string().optional(),
 });
