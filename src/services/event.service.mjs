@@ -1,4 +1,4 @@
-import eventModel from "../models/eventModel";
+import eventModel from "../models/eventModel.js";
 
 export const bookTickets = async (eventId, count) => {
   const event = await eventModel.findOneAndUpdate(
