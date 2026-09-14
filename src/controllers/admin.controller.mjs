@@ -1426,7 +1426,7 @@ export const getStatusVideo = catchAsync(async (req, res, next) => {
     statusVideosModel
       .find(filter)
       .select(
-        "_id tags videoUrl thumbnailUrl downloadsCount createdAt updatedAt",
+        "_id tags videoUrl thumbnailUrl downloadsCount likes createdAt updatedAt",
       )
       .sort(sort)
       .skip(skip)
@@ -1528,6 +1528,22 @@ export const statusDownloadCount = catchAsync(async (req, res, next) => {
     { new: true },
   );
   return sendSuccess(res, "success", {}, 201, true);
+});
+export const statusLike = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const { action = "like" } = req.body;
+
+  if (!["like", "unlike"].includes(action)) {
+    return next(new AppError("Invalid action", 400));
+  }
+
+  const result = await statusVideosModel.findOneAndUpdate(
+    { _id: id },
+    { $inc: { likes: action === "like" ? 1 : -1 } },
+    { new: true },
+  );
+
+  return sendSuccess(res, "success", {}, 200, true);
 });
 /**
  *  video upload service end here

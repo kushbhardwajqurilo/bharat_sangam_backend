@@ -6,6 +6,7 @@ const statusVideoSchema = new mongoose.Schema(
     videoUrl: { type: String, required: [true, "Video URL Required"] },
     thumbnailUrl: { type: String, required: [true, "Thumbnail URL Required"] },
     downloadsCount: { type: Number, default: 0 },
+    likes: { type: Number, default: 0 },
   },
   { timestamps: true },
 );

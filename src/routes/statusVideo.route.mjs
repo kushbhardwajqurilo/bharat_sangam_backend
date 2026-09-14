@@ -8,6 +8,7 @@ import {
   getSingleStatusVideoDetails,
   getStatusVideo,
   statusDownloadCount,
+  statusLike,
   statusVideoDelete,
   updateStatusVideoDetails,
 } from "../controllers/admin.controller.mjs";
@@ -60,5 +61,10 @@ statusVideoRouter.post(
   "/:id/download",
   validateParams(getPaymentByIdSchema),
   statusDownloadCount,
+);
+statusVideoRouter.post(
+  "/:id/likes",
+  validateParams(getPaymentByIdSchema),
+  statusLike,
 );
 export default statusVideoRouter;
