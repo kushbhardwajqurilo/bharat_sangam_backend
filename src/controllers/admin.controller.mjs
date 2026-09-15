@@ -17,6 +17,8 @@ import {
 } from "../config/bravoConfig.mjs";
 import statusVideosModel from "../models/statusVideosModel.js";
 import cloudinaryConfig from "../config/cloudinary.mjs";
+import { eventGalleryModel } from "../models/eventGalleryModel.mjs";
+import verifyAdmin from "../utils/isAdmin.mjs";
 
 // ================= TOKEN FUNCTIONS =================
 
@@ -1548,3 +1550,135 @@ export const statusLike = catchAsync(async (req, res, next) => {
 /**
  *  video upload service end here
  **/
+
+/**
+ * EVENT GELLARY START HERE
+ * **/
+
+export const eventGalleryController = catchAsync(async (req, res, next) => {
+  const {
+    date,
+    location,
+    title,
+    artistName,
+    category,
+    imageUrl,
+    likes,
+    commentsCount,
+  } = req.body;
+  const payload = {
+    date,
+    location,
+    title,
+    artistName,
+    category,
+    imageUrl,
+    likes,
+    commentsCount,
+  };
+  const result = await eventGalleryModel.create(payload);
+  if (!result) {
+    return next(new AppError("Unable to add gallery", 400));
+  }
+  return sendSuccess(res, "event gallery added", {}, 200, true);
+});
+
+export const getAllEventGalleryController = catchAsync(
+  async (req, res, next) => {
+    const isAdmin = await verifyAdmin(req.headers.authorization);
+
+    const limit = Math.min(Number(req.query.limit) || 10, 10);
+    const query = eventGalleryModel
+      .find({})
+      .sort({ createdAt: -1 })
+      .select("-__v -createdAt -updatedAt")
+      .lean();
+
+    if (isAdmin) {
+      const page = Math.max(Number(req.query.page) || 1, 1);
+      const skip = (page - 1) * limit;
+
+      const [result, total] = await Promise.all([
+        query.clone().skip(skip).limit(limit),
+        eventGalleryModel.countDocuments({}),
+      ]);
+
+      if (!result.length) {
+        return next(new AppError("Gallery not found", 404));
+      }
+
+      return sendSuccess(res, "success", {
+        data: result,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      });
+    }
+
+    // only latest 6, no pagination
+    const result = await query.limit(limit);
+
+    if (!result.length) {
+      return next(new AppError("Gallery not found", 404));
+    }
+
+    return sendSuccess(res, "success", result);
+  },
+);
+
+export const getSingleEventGallery = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const result = await eventGalleryModel
+    .findOne({ _id: id })
+    .select("-__v")
+    .lean();
+  if (!result) {
+    return next(new AppError("Unable to fetch gallery", 400));
+  }
+  return sendSuccess(res, "success", result, 200, true);
+});
+
+export const updateEventGalleryControler = catchAsync(
+  async (req, res, next) => {
+    const id = req.params?.id || req.query?.id;
+    const payload = { ...req.body };
+    const result = await eventGalleryModel.findByIdAndUpdate(
+      id,
+      { $set: payload },
+      { runValidators: true, new: true },
+    );
+
+    if (!result) {
+      return next(new AppError("unable to update", 400));
+    }
+    return sendSuccess(res, "success", {}, 201, true);
+  },
+);
+
+export const deleteEventGalleryController = catchAsync(
+  async (req, res, next) => {
+    const { id } = req?.params;
+    const resource = await eventGalleryModel
+      .findOne({ _id: id })
+      .select("imageUrl");
+    const public_id = `uploads${resource.imageUrl.split("uploads")[1].split(".")[0]}`;
+    const result = await cloudinaryConfig.uploader.destroy(public_id);
+    // console.log(result);
+    if (result?.result === "ok") {
+      const result = await eventGalleryModel.deleteOne({ _id: id });
+      if (result.deletedCount === 0) {
+        return next(new AppError("unable to delete", 400));
+      }
+      return sendSuccess(res, "success", {}, 201, true);
+    }
+
+    return next(new AppError("Failed to delete", 400));
+  },
+);
+
+/**
+ * EVENT GALLERY END HERE
+ * **/

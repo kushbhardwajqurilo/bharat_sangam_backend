@@ -25,6 +25,7 @@ import highlightsRouter from "./src/routes/highlightsRoutes/highlightsRoutes.mjs
 import testimonialRouter from "./src/routes/testimonialRoutes/testimonial.route.mjs";
 import statusVideoRouter from "./src/routes/statusVideo.route.mjs";
 import heroSectionRouter from "./src/routes/herosection.route.mjs";
+import eventGallery from "./src/routes/eventGallery.route.mjs";
 const app = express();
 
 /* ================= CORE SETTINGS ================= */
@@ -170,6 +171,7 @@ app.use(`${base}/highlight`, highlightsRouter);
 app.use(`${base}/testimonial`, testimonialRouter);
 app.use(`${base}/status`, statusVideoRouter);
 app.use(`${base}/home`, heroSectionRouter);
+app.use(`${base}/event-gallery`, eventGallery);
 
 /* ================= 404 ================= */
 
