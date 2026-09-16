@@ -18,8 +18,8 @@ import {
  * Endpoint: POST /api/v1/booking/create-order
  */
 export const createBookingOrder = catchAsync(async (req, res, next) => {
+  console.log({ body: req.body });
   const { fullName, email, mobile, tickets, ticketType, eventId } = req.body;
-  console.log({ body: req.body })
   const normalizedPhone = Number(mobile);
 
   // 1. Verify Razorpay environment
@@ -78,16 +78,24 @@ export const createBookingOrder = catchAsync(async (req, res, next) => {
   if (Array.isArray(event.bookingType) && event.bookingType.length > 0) {
     matchedType = event.bookingType.find((bt) => {
       if (!bt) return false;
-      const typeStr = typeof bt === "object" ? (bt.bookingType || bt.name || bt.subtitle || "") : String(bt);
+      const typeStr =
+        typeof bt === "object"
+          ? bt.bookingType || bt.name || bt.subtitle || ""
+          : String(bt);
       const typeId = typeof bt === "object" && bt._id ? bt._id.toString() : "";
       return (
         typeStr.toLowerCase() === targetType ||
         typeId === ticketType ||
-        typeStr.toLowerCase().replace(/\s+/g, "") === targetType.replace(/\s+/g, "")
+        typeStr.toLowerCase().replace(/\s+/g, "") ===
+          targetType.replace(/\s+/g, "")
       );
     });
 
-    if (matchedType && typeof matchedType === "object" && matchedType.price !== undefined) {
+    if (
+      matchedType &&
+      typeof matchedType === "object" &&
+      matchedType.price !== undefined
+    ) {
       unitPrice = Number(matchedType.price);
     }
   }
@@ -301,9 +309,7 @@ export const verifyAndCreateTicket = catchAsync(async (req, res, next) => {
   } = req.body;
 
   if (!RAZORPAY_KEY_SECRET) {
-    return next(
-      new AppError("Razorpay secret not configured on backend", 500),
-    );
+    return next(new AppError("Razorpay secret not configured on backend", 500));
   }
 
   // 1. Cryptographic HMAC-SHA256 Signature Verification

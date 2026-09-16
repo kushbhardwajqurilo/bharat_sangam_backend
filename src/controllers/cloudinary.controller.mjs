@@ -49,8 +49,6 @@ export const deleteFromClodinary = catchAsync(async (req, res, next) => {
     resource_type,
     invalidate: true,
   });
-  console.log("delete result", result);
-
   if (result.result !== "ok") {
     return next(new AppError(`Failed to delete file: ${result.result}`, 400));
   }

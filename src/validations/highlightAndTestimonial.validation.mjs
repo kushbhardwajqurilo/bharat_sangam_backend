@@ -1,10 +1,22 @@
-import mongoose from "mongoose";
 import z from "zod";
 
 export const highlightsSchema = z.object({
-  event: z.string().refine(mongoose.Types.ObjectId.isValid, "Invalid Event Id"),
-  url: z.string().url("Invalid URL"),
-  public_id: z.string().trim(),
+  title: z.string().trim(),
+  reviewerName: z.string().trim().optional(),
+  location: z.string().trim(),
+  rating: z.number(),
+  highlightVideoSrc: z.url("Invalid URL"),
+  posterSrc: z.string().trim().optional(),
+  videoSrc: z.url("Invalid URL"),
+});
+export const updateHighlightsSchema = z.object({
+  title: z.string().trim().optional(),
+  reviewerName: z.string().trim().optional(),
+  location: z.string().trim().optional(),
+  rating: z.number().optional(),
+  highlightVideoSrc: z.url("Invalid URL").optional(),
+  posterSrc: z.string().trim().optional(),
+  videoSrc: z.url("Invalid URL").optional(),
 });
 
 export const heroSectionSchema = z.object({
