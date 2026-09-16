@@ -162,7 +162,6 @@ app.use(`${base}/feedback`, feedbackRouter);
 app.use(`${base}/contact`, contactRouter);
 app.use(`${base}/subscriber`, subscriberRouter);
 app.use(`${base}/sponsor`, sponsorRouter);
-app.use(`${base}/sponsor`, sponsorRouter);
 app.use(`${base}/calender`, calendarRouter);
 app.use(`${base}/influencer`, influencerRouter);
 app.use(`${base}/artistrequest`, artistRequestRouter);
